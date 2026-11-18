@@ -1,0 +1,91 @@
+@expenceAPI_HostAddress = http://localhost:5277
+
+### 1. Register a User via Auth Controller (/api/Auth/register)
+POST {{expenceAPI_HostAddress}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "email": "kayalvizhiintn@gmail.com",
+  "password": "Password123!",
+  "fullName": "Kayalvizhi",
+  "backupEmail": "kayal.backup@gmail.com",
+  "mobileNumber": "+91 9876543210",
+  "place": "Tamil Nadu",
+  "monthlySalary": 50000,
+  "role": "User"
+}
+
+### 2. Login User via Auth Controller (/api/Auth/login)
+POST {{expenceAPI_HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "kayalvizhiintn@gmail.com",
+  "password": "Password123!"
+}
+
+### 3. Get Current User Profile (/api/Auth/user)
+GET {{expenceAPI_HostAddress}}/api/Auth/user?email=kayalvizhiintn@gmail.com
+Accept: application/json
+
+### 4. Register a User via Users Controller (/api/Users/register)
+POST {{expenceAPI_HostAddress}}/api/Users/register
+Content-Type: application/json
+
+{
+  "email": "kayalvizhiintn@gmail.com",
+  "password": "Password123!",
+  "fullName": "Kayalvizhi",
+  "backupEmail": "kayal.backup@gmail.com",
+  "mobileNumber": "+91 9876543210",
+  "place": "Tamil Nadu",
+  "monthlySalary": 50000,
+  "role": "User"
+}
+
+### 3. Get All Users
+GET {{expenceAPI_HostAddress}}/api/users
+Accept: application/json
+
+### 4. Create Salary Cycle Month
+POST {{expenceAPI_HostAddress}}/api/salarycycles
+Content-Type: application/json
+
+{
+  "month": "October 2026",
+  "salaryDate": "2026-10-31T00:00:00Z",
+  "salaryAmount": 25000,
+  "existingBalance": 8500,
+  "dailyBudget": 500,
+  "weeklyBudget": 3500,
+  "monthlyBudget": 15000,
+  "notes": "October festival month cycle",
+  "isCurrentCycle": true
+}
+
+### 5. Get Active Salary Cycle
+GET {{expenceAPI_HostAddress}}/api/salarycycles/active
+Accept: application/json
+
+### 6. Create Expense
+POST {{expenceAPI_HostAddress}}/api/expenses
+Content-Type: application/json
+
+{
+  "name": "Groceries & Vegetables",
+  "date": "2026-11-01T00:00:00Z",
+  "amount": 1450,
+  "category": "Shopping",
+  "paymentMethod": "UPI",
+  "notes": "Monthly vegetable and grocery stock"
+}
+
+### 7. Get All Expenses (with optional category / search filters)
+GET {{expenceAPI_HostAddress}}/api/expenses
+Accept: application/json
+
+### 8. Get Dashboard Summary (Aggregated totals, balance, category mix)
+GET {{expenceAPI_HostAddress}}/api/dashboard/summary
+Accept: application/json
+
+###
