@@ -15,6 +15,7 @@ export interface SalaryCycleResponse {
   notes?: string;
   isCurrentCycle: boolean;
   expensesCount: number;
+  isDelete: number; // 0 = active, 1 = soft-deleted
   createdAt: string;
 }
 
@@ -49,8 +50,10 @@ export const salaryCycleService = {
   /**
    * Gets all salary cycles ordered by date.
    */
-  async getAll(): Promise<SalaryCycleResponse[]> {
-    const response = await apiClient.get<SalaryCycleResponse[]>("/SalaryCycles");
+  async getAll(includeDeleted = false): Promise<SalaryCycleResponse[]> {
+    const response = await apiClient.get<SalaryCycleResponse[]>("/SalaryCycles", {
+      params: { includeDeleted },
+    });
     return response.data;
   },
 
@@ -61,19 +64,18 @@ export const salaryCycleService = {
     try {
       const response = await apiClient.get<SalaryCycleResponse>("/SalaryCycles/active");
       return response.data;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
-        return null;
-      }
-      throw error;
+    } catch {
+      return null;
     }
   },
 
   /**
-   * Gets a salary cycle by Id.
+   * Gets a single salary cycle by Id.
    */
-  async getById(id: string): Promise<SalaryCycleResponse> {
-    const response = await apiClient.get<SalaryCycleResponse>(`/SalaryCycles/${id}`);
+  async getById(id: string, includeDeleted = true): Promise<SalaryCycleResponse> {
+    const response = await apiClient.get<SalaryCycleResponse>(`/SalaryCycles/${id}`, {
+      params: { includeDeleted },
+    });
     return response.data;
   },
 
@@ -94,10 +96,18 @@ export const salaryCycleService = {
   },
 
   /**
-   * Soft deletes a salary cycle.
+   * Deletes (soft deletes) a salary cycle, setting isDelete = 1 in the database.
    */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`/SalaryCycles/${id}`);
+  },
+
+  /**
+   * Restores a previously soft-deleted salary cycle, setting isDelete = 0.
+   */
+  async restore(id: string): Promise<SalaryCycleResponse> {
+    const response = await apiClient.post<SalaryCycleResponse>(`/SalaryCycles/${id}/restore`);
+    return response.data;
   },
 };
 

@@ -9,6 +9,7 @@ export interface ExpenseResponse {
   paymentMethod: string;
   notes?: string;
   salaryCycleId?: string;
+  isDelete: number; // 0 = active / not deleted, 1 = soft-deleted
   createdAt: string;
   updatedAt?: string;
 }
@@ -37,6 +38,8 @@ export interface ExpenseFilters {
   salaryCycleId?: string;
   category?: string;
   search?: string;
+  includeDeleted?: boolean;
+  isDelete?: number;
 }
 
 /**
@@ -56,8 +59,10 @@ export const expenseService = {
   /**
    * Gets a single expense by Id.
    */
-  async getById(id: string): Promise<ExpenseResponse> {
-    const response = await apiClient.get<ExpenseResponse>(`/Expenses/${id}`);
+  async getById(id: string, includeDeleted = true): Promise<ExpenseResponse> {
+    const response = await apiClient.get<ExpenseResponse>(`/Expenses/${id}`, {
+      params: { includeDeleted },
+    });
     return response.data;
   },
 
@@ -78,10 +83,18 @@ export const expenseService = {
   },
 
   /**
-   * Deletes (soft deletes) an expense entry.
+   * Deletes (soft deletes) an expense entry, setting isDelete = 1 in the database.
    */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`/Expenses/${id}`);
+  },
+
+  /**
+   * Restores a previously soft-deleted expense, setting isDelete = 0.
+   */
+  async restore(id: string): Promise<ExpenseResponse> {
+    const response = await apiClient.post<ExpenseResponse>(`/Expenses/${id}/restore`);
+    return response.data;
   },
 };
 

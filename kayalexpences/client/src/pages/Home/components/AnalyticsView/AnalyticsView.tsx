@@ -14,6 +14,7 @@ type Expense = {
   payment: string;
   notes: string;
   valid?: boolean;
+  isDelete?: number;
 };
 
 type Cycle = {

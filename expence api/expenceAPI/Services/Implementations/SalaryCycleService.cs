@@ -15,24 +15,26 @@ public class SalaryCycleService : ISalaryCycleService
         _context = context;
     }
 
-    public async Task<IEnumerable<SalaryCycleResponseDto>> GetAllAsync()
+    public async Task<IEnumerable<SalaryCycleResponseDto>> GetAllAsync(bool includeDeleted = false)
     {
-        var cycles = await _context.SalaryCycles
-            .AsNoTracking()
-            .Include(c => c.Expenses)
+        var query = includeDeleted
+            ? _context.SalaryCycles.IgnoreQueryFilters().AsNoTracking().Include(c => c.Expenses).AsQueryable()
+            : _context.SalaryCycles.AsNoTracking().Include(c => c.Expenses).AsQueryable();
+
+        var cycles = await query
             .OrderByDescending(c => c.SalaryDate)
             .ToListAsync();
 
         return cycles.Select(MapToResponseDto);
     }
 
-    public async Task<SalaryCycleResponseDto?> GetByIdAsync(Guid id)
+    public async Task<SalaryCycleResponseDto?> GetByIdAsync(Guid id, bool includeDeleted = true)
     {
-        var cycle = await _context.SalaryCycles
-            .AsNoTracking()
-            .Include(c => c.Expenses)
-            .FirstOrDefaultAsync(c => c.Id == id);
+        var query = includeDeleted
+            ? _context.SalaryCycles.IgnoreQueryFilters().AsNoTracking().Include(c => c.Expenses).AsQueryable()
+            : _context.SalaryCycles.AsNoTracking().Include(c => c.Expenses).AsQueryable();
 
+        var cycle = await query.FirstOrDefaultAsync(c => c.Id == id);
         return cycle == null ? null : MapToResponseDto(cycle);
     }
 
@@ -74,6 +76,8 @@ public class SalaryCycleService : ISalaryCycleService
             MonthlyBudget = dto.MonthlyBudget,
             Notes = dto.Notes?.Trim(),
             IsCurrentCycle = dto.IsCurrentCycle,
+            IsDelete = 0,
+            IsActive = true,
             CreatedBy = userEmail ?? "System"
         };
 
@@ -86,6 +90,7 @@ public class SalaryCycleService : ISalaryCycleService
     public async Task<SalaryCycleResponseDto?> UpdateAsync(Guid id, UpdateSalaryCycleDto dto, string? userEmail = null)
     {
         var cycle = await _context.SalaryCycles
+            .IgnoreQueryFilters()
             .Include(c => c.Expenses)
             .FirstOrDefaultAsync(c => c.Id == id);
 
@@ -121,20 +126,37 @@ public class SalaryCycleService : ISalaryCycleService
 
     public async Task<bool> DeleteAsync(Guid id, string? userEmail = null)
     {
-        var cycle = await _context.SalaryCycles.FirstOrDefaultAsync(c => c.Id == id);
+        var cycle = await _context.SalaryCycles.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id);
         if (cycle == null) return false;
 
-        cycle.IsDeleted = true;
+        // Soft delete: set IsDelete = 1 (remains visible in database table)
+        cycle.IsDelete = 1;
         cycle.IsActive = false;
         cycle.UpdatedBy = userEmail ?? "System";
+        cycle.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return true;
     }
 
+    public async Task<SalaryCycleResponseDto?> RestoreAsync(Guid id, string? userEmail = null)
+    {
+        var cycle = await _context.SalaryCycles.IgnoreQueryFilters().Include(c => c.Expenses).FirstOrDefaultAsync(c => c.Id == id);
+        if (cycle == null) return null;
+
+        // Restore: set IsDelete = 0
+        cycle.IsDelete = 0;
+        cycle.IsActive = true;
+        cycle.UpdatedBy = userEmail ?? "System";
+        cycle.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return MapToResponseDto(cycle);
+    }
+
     private static SalaryCycleResponseDto MapToResponseDto(SalaryCycle c)
     {
-        var validExpenses = c.Expenses?.Where(e => !e.IsDeleted).ToList() ?? new List<Expense>();
+        var validExpenses = c.Expenses?.Where(e => e.IsDelete == 0).ToList() ?? new List<Expense>();
         var totalExpenses = validExpenses.Sum(e => e.Amount);
         var totalAvailable = c.SalaryAmount + c.ExistingBalance;
         var remainingBalance = totalAvailable - totalExpenses;
@@ -154,8 +176,8 @@ public class SalaryCycleService : ISalaryCycleService
             c.Notes,
             c.IsCurrentCycle,
             validExpenses.Count,
+            c.IsDelete,
             c.CreatedAt
         );
     }
 }
-

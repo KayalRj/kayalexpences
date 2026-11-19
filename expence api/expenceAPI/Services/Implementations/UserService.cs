@@ -17,24 +17,38 @@ public class UserService : IUserService
         _context = context;
     }
 
-    public async Task<IEnumerable<UserResponseDto>> GetAllAsync()
+    public async Task<IEnumerable<UserResponseDto>> GetAllAsync(bool includeDeleted = false, int? isDelete = null)
     {
-        return await _context.Users
-            .AsNoTracking()
+        var query = (includeDeleted || isDelete.HasValue)
+            ? _context.Users.IgnoreQueryFilters().AsNoTracking().AsQueryable()
+            : _context.Users.AsNoTracking().AsQueryable();
+
+        if (isDelete.HasValue)
+        {
+            query = query.Where(u => u.IsDelete == isDelete.Value);
+        }
+
+        return await query
             .OrderByDescending(u => u.CreatedAt)
             .Select(u => MapToResponseDto(u))
             .ToListAsync();
     }
 
-    public async Task<UserResponseDto?> GetByIdAsync(Guid id)
+    public async Task<UserResponseDto?> GetByIdAsync(Guid id, bool includeDeleted = true)
     {
-        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+        var query = includeDeleted
+            ? _context.Users.IgnoreQueryFilters().AsNoTracking()
+            : _context.Users.AsNoTracking();
+
+        var user = await query.FirstOrDefaultAsync(u => u.Id == id);
         return user == null ? null : MapToResponseDto(user);
     }
 
     public async Task<UserResponseDto?> GetByEmailAsync(string email)
     {
-        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower().Trim());
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower().Trim());
         return user == null ? null : MapToResponseDto(user);
     }
 
@@ -42,7 +56,7 @@ public class UserService : IUserService
     {
         var normalizedEmail = dto.Email.Trim().ToLower();
 
-        var exists = await _context.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail);
+        var exists = await _context.Users.IgnoreQueryFilters().AnyAsync(u => u.Email.ToLower() == normalizedEmail);
         if (exists)
         {
             throw new InvalidOperationException($"User with email '{dto.Email}' already exists.");
@@ -58,6 +72,8 @@ public class UserService : IUserService
             Place = dto.Place?.Trim(),
             MonthlySalary = dto.MonthlySalary,
             Role = string.IsNullOrWhiteSpace(dto.Role) ? "User" : dto.Role.Trim(),
+            IsDelete = 0,
+            IsActive = true,
             CreatedBy = normalizedEmail
         };
 
@@ -71,7 +87,9 @@ public class UserService : IUserService
             // PostgreSQL Error 42703: column does not exist. Auto-heal schema by adding missing column.
             await _context.Database.ExecuteSqlRawAsync(@"
                 ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""FullName"" text;
+                ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
                 ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS ""FullName"" text;
+                ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
             ");
             await _context.SaveChangesAsync();
         }
@@ -104,7 +122,7 @@ public class UserService : IUserService
 
     public async Task<UserResponseDto?> UpdateAsync(Guid id, UpdateUserDto dto)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
         if (user == null) return null;
 
         if (dto.FullName != null) user.FullName = dto.FullName.Trim();
@@ -124,7 +142,9 @@ public class UserService : IUserService
         {
             await _context.Database.ExecuteSqlRawAsync(@"
                 ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""FullName"" text;
+                ALTER TABLE IF EXISTS ""Users"" ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
                 ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS ""FullName"" text;
+                ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
             ");
             await _context.SaveChangesAsync();
         }
@@ -134,15 +154,30 @@ public class UserService : IUserService
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
         if (user == null) return false;
 
-        user.IsDeleted = true;
+        // Soft delete: set IsDelete = 1 (remains visible in database table)
+        user.IsDelete = 1;
         user.IsActive = false;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<UserResponseDto?> RestoreAsync(Guid id)
+    {
+        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id);
+        if (user == null) return null;
+
+        // Restore: set IsDelete = 0
+        user.IsDelete = 0;
+        user.IsActive = true;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return MapToResponseDto(user);
     }
 
     private static UserResponseDto MapToResponseDto(User u)
@@ -156,6 +191,7 @@ public class UserService : IUserService
             u.Place,
             u.MonthlySalary,
             u.Role,
+            u.IsDelete,
             u.CreatedAt
         );
     }
@@ -171,4 +207,3 @@ public class UserService : IUserService
         return HashPassword(password).Equals(hash, StringComparison.OrdinalIgnoreCase);
     }
 }
-

@@ -19,16 +19,17 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // 1. Soft-delete global query filters
-        modelBuilder.Entity<Expense>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<SalaryCycle>().HasQueryFilter(c => !c.IsDeleted);
-        modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+        // 1. Soft-delete global query filters (0 = not deleted, 1 = deleted)
+        modelBuilder.Entity<Expense>().HasQueryFilter(e => e.IsDelete == 0);
+        modelBuilder.Entity<SalaryCycle>().HasQueryFilter(c => c.IsDelete == 0);
+        modelBuilder.Entity<User>().HasQueryFilter(u => u.IsDelete == 0);
 
         // 2. User Configuration
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasIndex(u => u.Email).IsUnique();
             entity.Property(u => u.MonthlySalary).HasColumnType("decimal(18,2)");
+            entity.Property(u => u.IsDelete).HasDefaultValue(0);
         });
 
         // 3. SalaryCycle Configuration
@@ -39,6 +40,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(c => c.DailyBudget).HasColumnType("decimal(18,2)");
             entity.Property(c => c.WeeklyBudget).HasColumnType("decimal(18,2)");
             entity.Property(c => c.MonthlyBudget).HasColumnType("decimal(18,2)");
+            entity.Property(c => c.IsDelete).HasDefaultValue(0);
 
             entity.HasOne(c => c.User)
                   .WithMany(u => u.SalaryCycles)
@@ -50,6 +52,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Expense>(entity =>
         {
             entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.IsDelete).HasDefaultValue(0);
 
             entity.HasOne(e => e.SalaryCycle)
                   .WithMany(c => c.Expenses)
@@ -89,4 +92,3 @@ public class ApplicationDbContext : DbContext
         return base.SaveChangesAsync(cancellationToken);
     }
 }
-

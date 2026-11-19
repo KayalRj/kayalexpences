@@ -19,11 +19,14 @@ public class UsersController : ControllerBase
 
     /// <summary>
     /// Gets all registered user profiles.
+    /// By default, returns active users (isDelete = 0). Pass includeDeleted=true or isDelete=1 to view deleted users.
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetAll(
+        [FromQuery] bool includeDeleted = false,
+        [FromQuery] int? isDelete = null)
     {
-        var users = await _userService.GetAllAsync();
+        var users = await _userService.GetAllAsync(includeDeleted, isDelete);
         return Ok(users);
     }
 
@@ -31,9 +34,9 @@ public class UsersController : ControllerBase
     /// Gets a user profile by Id.
     /// </summary>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<UserResponseDto>> GetById(Guid id)
+    public async Task<ActionResult<UserResponseDto>> GetById(Guid id, [FromQuery] bool includeDeleted = true)
     {
-        var user = await _userService.GetByIdAsync(id);
+        var user = await _userService.GetByIdAsync(id, includeDeleted);
         if (user == null)
         {
             return NotFound(new { message = $"User with Id '{id}' not found." });
@@ -43,7 +46,7 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Registers a new user account.
+    /// Registers a new user account (with isDelete = 0).
     /// </summary>
     [HttpPost("register")]
     public async Task<ActionResult<UserResponseDto>> Register([FromBody] RegisterUserDto dto)
@@ -106,6 +109,7 @@ public class UsersController : ControllerBase
 
     /// <summary>
     /// Soft deletes a user account.
+    /// Sets isDelete = 1 and keeps the row with all its fields in the database table.
     /// </summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
@@ -116,7 +120,21 @@ public class UsersController : ControllerBase
             return NotFound(new { message = $"User with Id '{id}' not found." });
         }
 
-        return NoContent();
+        return Ok(new { message = "User deleted successfully (soft-deleted, marked isDelete=1).", id, isDelete = 1 });
+    }
+
+    /// <summary>
+    /// Restores a previously soft-deleted user account (sets isDelete = 0).
+    /// </summary>
+    [HttpPost("{id:guid}/restore")]
+    public async Task<ActionResult<UserResponseDto>> Restore(Guid id)
+    {
+        var restored = await _userService.RestoreAsync(id);
+        if (restored == null)
+        {
+            return NotFound(new { message = $"User with Id '{id}' not found." });
+        }
+
+        return Ok(restored);
     }
 }
-

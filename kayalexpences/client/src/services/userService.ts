@@ -9,6 +9,7 @@ export interface UserProfile {
   place?: string;
   monthlySalary: number;
   role: string;
+  isDelete: number; // 0 = active, 1 = soft-deleted
   createdAt: string;
 }
 
@@ -73,18 +74,22 @@ export const userService = {
   },
 
   /**
-   * Gets all registered users (for user management / admin).
+   * Gets all registered users with optional soft-delete filtering.
    */
-  async getAll(): Promise<UserProfile[]> {
-    const response = await apiClient.get<UserProfile[]>("/Users");
+  async getAll(includeDeleted = false, isDelete?: number): Promise<UserProfile[]> {
+    const response = await apiClient.get<UserProfile[]>("/Users", {
+      params: { includeDeleted, isDelete },
+    });
     return response.data;
   },
 
   /**
    * Gets user profile by Id.
    */
-  async getById(id: string): Promise<UserProfile> {
-    const response = await apiClient.get<UserProfile>(`/Users/${id}`);
+  async getById(id: string, includeDeleted = true): Promise<UserProfile> {
+    const response = await apiClient.get<UserProfile>(`/Users/${id}`, {
+      params: { includeDeleted },
+    });
     return response.data;
   },
 
@@ -97,10 +102,18 @@ export const userService = {
   },
 
   /**
-   * Soft deletes a user account.
+   * Soft deletes a user account, setting isDelete = 1 in the database.
    */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`/Users/${id}`);
+  },
+
+  /**
+   * Restores a previously soft-deleted user account, setting isDelete = 0.
+   */
+  async restore(id: string): Promise<UserProfile> {
+    const response = await apiClient.post<UserProfile>(`/Users/${id}/restore`);
+    return response.data;
   },
 
   /**

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace expenceAPI.Models.Common;
 
 /// <summary>
@@ -37,8 +39,19 @@ public abstract class BaseEntity
     public bool IsActive { get; set; } = true;
 
     /// <summary>
-    /// Soft delete flag: true if deleted, false otherwise.
+    /// Soft delete flag:
+    /// 0 = Not deleted (Active, record is valid)
+    /// 1 = Deleted (Soft-deleted, record remains in DB with all fields intact)
     /// </summary>
-    public bool IsDeleted { get; set; } = false;
-}
+    public int IsDelete { get; set; } = 0;
 
+    /// <summary>
+    /// Helper property for backward compatibility with boolean checks.
+    /// </summary>
+    [NotMapped]
+    public bool IsDeleted
+    {
+        get => IsDelete == 1;
+        set => IsDelete = value ? 1 : 0;
+    }
+}

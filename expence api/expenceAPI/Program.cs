@@ -56,17 +56,54 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<ApplicationDbContext>();
         context.Database.EnsureCreated();
 
-        // Ensure schema is updated with FullName column in PostgreSQL
+        // Ensure schema is updated with FullName and IsDelete columns in PostgreSQL
         try
         {
             context.Database.ExecuteSqlRaw(@"
                 DO $$ 
                 BEGIN 
+                    -- 1. Users table
                     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'Users') THEN
                         ALTER TABLE ""Users"" ADD COLUMN IF NOT EXISTS ""FullName"" text;
+                        ALTER TABLE ""Users"" ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Users' AND column_name = 'IsDeleted') THEN
+                            UPDATE ""Users"" SET ""IsDelete"" = CASE WHEN ""IsDeleted"" = true THEN 1 ELSE 0 END WHERE ""IsDelete"" = 0;
+                        END IF;
                     END IF;
                     IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'users') THEN
                         ALTER TABLE users ADD COLUMN IF NOT EXISTS ""FullName"" text;
+                        ALTER TABLE users ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'IsDeleted') THEN
+                            UPDATE users SET ""IsDelete"" = CASE WHEN ""IsDeleted"" = true THEN 1 ELSE 0 END WHERE ""IsDelete"" = 0;
+                        END IF;
+                    END IF;
+
+                    -- 2. Expenses table
+                    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'Expenses') THEN
+                        ALTER TABLE ""Expenses"" ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Expenses' AND column_name = 'IsDeleted') THEN
+                            UPDATE ""Expenses"" SET ""IsDelete"" = CASE WHEN ""IsDeleted"" = true THEN 1 ELSE 0 END WHERE ""IsDelete"" = 0;
+                        END IF;
+                    END IF;
+                    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'expenses') THEN
+                        ALTER TABLE expenses ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'expenses' AND column_name = 'IsDeleted') THEN
+                            UPDATE expenses SET ""IsDelete"" = CASE WHEN ""IsDeleted"" = true THEN 1 ELSE 0 END WHERE ""IsDelete"" = 0;
+                        END IF;
+                    END IF;
+
+                    -- 3. SalaryCycles table
+                    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'SalaryCycles') THEN
+                        ALTER TABLE ""SalaryCycles"" ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'SalaryCycles' AND column_name = 'IsDeleted') THEN
+                            UPDATE ""SalaryCycles"" SET ""IsDelete"" = CASE WHEN ""IsDeleted"" = true THEN 1 ELSE 0 END WHERE ""IsDelete"" = 0;
+                        END IF;
+                    END IF;
+                    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'salarycycles') THEN
+                        ALTER TABLE salarycycles ADD COLUMN IF NOT EXISTS ""IsDelete"" integer NOT NULL DEFAULT 0;
+                        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'salarycycles' AND column_name = 'IsDeleted') THEN
+                            UPDATE salarycycles SET ""IsDelete"" = CASE WHEN ""IsDeleted"" = true THEN 1 ELSE 0 END WHERE ""IsDelete"" = 0;
+                        END IF;
                     END IF;
                 END $$;
             ");

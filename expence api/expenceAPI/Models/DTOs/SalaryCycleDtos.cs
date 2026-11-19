@@ -17,6 +17,7 @@ public record SalaryCycleResponseDto(
     string? Notes,
     bool IsCurrentCycle,
     int ExpensesCount,
+    int IsDelete,
     DateTime CreatedAt
 );
 
@@ -65,4 +66,3 @@ public record UpdateSalaryCycleDto(
 
     bool IsCurrentCycle
 );
-

@@ -16,7 +16,7 @@ public class DashboardService : IDashboardService
 
     public async Task<DashboardSummaryDto> GetSummaryAsync(Guid? salaryCycleId = null)
     {
-        // 1. Fetch cycle
+        // 1. Fetch cycle (active or specified)
         var cycleQuery = _context.SalaryCycles.AsNoTracking().AsQueryable();
 
         var cycle = salaryCycleId.HasValue
@@ -25,8 +25,8 @@ public class DashboardService : IDashboardService
 
         var totalAvailable = cycle != null ? (cycle.SalaryAmount + cycle.ExistingBalance) : 0m;
 
-        // 2. Query expenses
-        var expenseQuery = _context.Expenses.AsNoTracking().AsQueryable();
+        // 2. Query expenses (only active expenses where IsDelete == 0)
+        var expenseQuery = _context.Expenses.AsNoTracking().Where(e => e.IsDelete == 0).AsQueryable();
         if (cycle != null)
         {
             expenseQuery = expenseQuery.Where(e => e.SalaryCycleId == cycle.Id);
@@ -74,6 +74,7 @@ public class DashboardService : IDashboardService
                 e.PaymentMethod,
                 e.Notes,
                 e.SalaryCycleId,
+                e.IsDelete,
                 e.CreatedAt,
                 e.UpdatedAt
             ))
@@ -97,4 +98,3 @@ public class DashboardService : IDashboardService
         );
     }
 }
-

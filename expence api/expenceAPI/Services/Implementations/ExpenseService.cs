@@ -15,9 +15,21 @@ public class ExpenseService : IExpenseService
         _context = context;
     }
 
-    public async Task<IEnumerable<ExpenseResponseDto>> GetAllAsync(Guid? salaryCycleId = null, string? category = null, string? search = null)
+    public async Task<IEnumerable<ExpenseResponseDto>> GetAllAsync(
+        Guid? salaryCycleId = null,
+        string? category = null,
+        string? search = null,
+        bool includeDeleted = false,
+        int? isDelete = null)
     {
-        var query = _context.Expenses.AsNoTracking().AsQueryable();
+        var query = (includeDeleted || isDelete.HasValue)
+            ? _context.Expenses.IgnoreQueryFilters().AsNoTracking().AsQueryable()
+            : _context.Expenses.AsNoTracking().AsQueryable();
+
+        if (isDelete.HasValue)
+        {
+            query = query.Where(e => e.IsDelete == isDelete.Value);
+        }
 
         if (salaryCycleId.HasValue)
         {
@@ -47,15 +59,20 @@ public class ExpenseService : IExpenseService
                 e.PaymentMethod,
                 e.Notes,
                 e.SalaryCycleId,
+                e.IsDelete,
                 e.CreatedAt,
                 e.UpdatedAt
             ))
             .ToListAsync();
     }
 
-    public async Task<ExpenseResponseDto?> GetByIdAsync(Guid id)
+    public async Task<ExpenseResponseDto?> GetByIdAsync(Guid id, bool includeDeleted = true)
     {
-        var e = await _context.Expenses.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        var query = includeDeleted
+            ? _context.Expenses.IgnoreQueryFilters().AsNoTracking()
+            : _context.Expenses.AsNoTracking();
+
+        var e = await query.FirstOrDefaultAsync(x => x.Id == id);
         if (e == null) return null;
 
         return new ExpenseResponseDto(
@@ -67,6 +84,7 @@ public class ExpenseService : IExpenseService
             e.PaymentMethod,
             e.Notes,
             e.SalaryCycleId,
+            e.IsDelete,
             e.CreatedAt,
             e.UpdatedAt
         );
@@ -83,6 +101,8 @@ public class ExpenseService : IExpenseService
             PaymentMethod = dto.PaymentMethod.Trim(),
             Notes = dto.Notes?.Trim(),
             SalaryCycleId = dto.SalaryCycleId,
+            IsDelete = 0,
+            IsActive = true,
             CreatedBy = userEmail ?? "System"
         };
 
@@ -98,6 +118,7 @@ public class ExpenseService : IExpenseService
             expense.PaymentMethod,
             expense.Notes,
             expense.SalaryCycleId,
+            expense.IsDelete,
             expense.CreatedAt,
             expense.UpdatedAt
         );
@@ -105,7 +126,7 @@ public class ExpenseService : IExpenseService
 
     public async Task<ExpenseResponseDto?> UpdateAsync(Guid id, UpdateExpenseDto dto, string? userEmail = null)
     {
-        var expense = await _context.Expenses.FirstOrDefaultAsync(x => x.Id == id);
+        var expense = await _context.Expenses.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == id);
         if (expense == null) return null;
 
         expense.Name = dto.Name.Trim();
@@ -128,6 +149,7 @@ public class ExpenseService : IExpenseService
             expense.PaymentMethod,
             expense.Notes,
             expense.SalaryCycleId,
+            expense.IsDelete,
             expense.CreatedAt,
             expense.UpdatedAt
         );
@@ -135,16 +157,44 @@ public class ExpenseService : IExpenseService
 
     public async Task<bool> DeleteAsync(Guid id, string? userEmail = null)
     {
-        var expense = await _context.Expenses.FirstOrDefaultAsync(x => x.Id == id);
+        var expense = await _context.Expenses.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == id);
         if (expense == null) return false;
 
-        // Soft delete leveraging BaseEntity
-        expense.IsDeleted = true;
+        // Soft delete: set IsDelete = 1 (remains visible in database table)
+        expense.IsDelete = 1;
         expense.IsActive = false;
         expense.UpdatedBy = userEmail ?? "System";
+        expense.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return true;
     }
-}
 
+    public async Task<ExpenseResponseDto?> RestoreAsync(Guid id, string? userEmail = null)
+    {
+        var expense = await _context.Expenses.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == id);
+        if (expense == null) return null;
+
+        // Restore: set IsDelete = 0
+        expense.IsDelete = 0;
+        expense.IsActive = true;
+        expense.UpdatedBy = userEmail ?? "System";
+        expense.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return new ExpenseResponseDto(
+            expense.Id,
+            expense.Name,
+            expense.Date,
+            expense.Amount,
+            expense.Category,
+            expense.PaymentMethod,
+            expense.Notes,
+            expense.SalaryCycleId,
+            expense.IsDelete,
+            expense.CreatedAt,
+            expense.UpdatedAt
+        );
+    }
+}

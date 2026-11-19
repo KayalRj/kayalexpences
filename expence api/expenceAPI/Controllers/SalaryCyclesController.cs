@@ -19,11 +19,12 @@ public class SalaryCyclesController : ControllerBase
 
     /// <summary>
     /// Gets all salary cycles ordered by date.
+    /// By default, returns active cycles (isDelete = 0). Pass includeDeleted=true to view all.
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SalaryCycleResponseDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<SalaryCycleResponseDto>>> GetAll([FromQuery] bool includeDeleted = false)
     {
-        var cycles = await _salaryCycleService.GetAllAsync();
+        var cycles = await _salaryCycleService.GetAllAsync(includeDeleted);
         return Ok(cycles);
     }
 
@@ -46,9 +47,9 @@ public class SalaryCyclesController : ControllerBase
     /// Gets a single salary cycle by Id.
     /// </summary>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<SalaryCycleResponseDto>> GetById(Guid id)
+    public async Task<ActionResult<SalaryCycleResponseDto>> GetById(Guid id, [FromQuery] bool includeDeleted = true)
     {
-        var cycle = await _salaryCycleService.GetByIdAsync(id);
+        var cycle = await _salaryCycleService.GetByIdAsync(id, includeDeleted);
         if (cycle == null)
         {
             return NotFound(new { message = $"Salary cycle with Id '{id}' not found." });
@@ -58,7 +59,7 @@ public class SalaryCyclesController : ControllerBase
     }
 
     /// <summary>
-    /// Creates a new salary cycle month.
+    /// Creates a new salary cycle month (with isDelete = 0).
     /// </summary>
     [HttpPost]
     public async Task<ActionResult<SalaryCycleResponseDto>> Create([FromBody] CreateSalaryCycleDto dto)
@@ -94,6 +95,7 @@ public class SalaryCyclesController : ControllerBase
 
     /// <summary>
     /// Soft deletes a salary cycle.
+    /// Sets isDelete = 1 and keeps the row with all its fields in the database table.
     /// </summary>
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
@@ -104,7 +106,21 @@ public class SalaryCyclesController : ControllerBase
             return NotFound(new { message = $"Salary cycle with Id '{id}' not found." });
         }
 
-        return NoContent();
+        return Ok(new { message = "Salary cycle deleted successfully (soft-deleted, marked isDelete=1).", id, isDelete = 1 });
+    }
+
+    /// <summary>
+    /// Restores a previously soft-deleted salary cycle (sets isDelete = 0).
+    /// </summary>
+    [HttpPost("{id:guid}/restore")]
+    public async Task<ActionResult<SalaryCycleResponseDto>> Restore(Guid id)
+    {
+        var restored = await _salaryCycleService.RestoreAsync(id, User.Identity?.Name ?? "User");
+        if (restored == null)
+        {
+            return NotFound(new { message = $"Salary cycle with Id '{id}' not found." });
+        }
+
+        return Ok(restored);
     }
 }
-

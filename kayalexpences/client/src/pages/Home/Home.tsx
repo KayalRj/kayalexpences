@@ -86,7 +86,7 @@ function getPaymentIcon(pay: string) {
   }
 }
 
-type Expense = { id: string; date: string; name: string; category: string; amount: number; payment: string; notes: string; valid?: boolean };
+type Expense = { id: string; date: string; name: string; category: string; amount: number; payment: string; notes: string; valid?: boolean; isDelete?: number };
 type Cycle = { id: string; month: string; salaryDate: string; salary: number; balance: number; notes: string; budgets: { daily: number; weekly: number; monthly: number }; expenses: Expense[] };
 type Store = { cycles: Cycle[]; activeId: string | null; lowBalanceThreshold: number };
 
@@ -135,7 +135,7 @@ function validExpense(e: Expense, cycle?: Cycle) {
   const d = new Date(`${e.date}T00:00:00`);
   return Boolean(e.date && !Number.isNaN(d.getTime()) && d >= start && d <= end && e.name.trim().length >= 2 && CATEGORIES.includes(e.category) && Number.isFinite(Number(e.amount)) && Number(e.amount) > 0 && PAYMENTS.includes(e.payment) && e.notes.trim().length >= 5 && e.notes.trim().length <= 250);
 }
-function totals(cycle: Cycle) { const expenses = cycle.expenses.filter(e => e.valid !== false && validExpense(e, cycle)); const total = expenses.reduce((s, e) => s + Number(e.amount), 0); const today = isoToday(); const now = new Date(); const weekStart = startOfWeek(now); const todayTotal = expenses.filter(e => e.date === today).reduce((s, e) => s + e.amount, 0); const weekTotal = expenses.filter(e => { const d = new Date(`${e.date}T00:00:00`); return d >= weekStart && d <= now; }).reduce((s, e) => s + e.amount, 0); const byCategory = CATEGORIES.map(category => ({ category, value: expenses.filter(e => e.category === category).reduce((s, e) => s + e.amount, 0) })).filter(x => x.value > 0).sort((a, b) => b.value - a.value); return { expenses, total, todayTotal, weekTotal, byCategory, available: cycle.salary + cycle.balance, remaining: cycle.salary + cycle.balance - total }; }
+function totals(cycle: Cycle) { const expenses = cycle.expenses.filter(e => e.valid !== false && e.isDelete !== 1 && validExpense(e, cycle)); const total = expenses.reduce((s, e) => s + Number(e.amount), 0); const today = isoToday(); const now = new Date(); const weekStart = startOfWeek(now); const todayTotal = expenses.filter(e => e.date === today).reduce((s, e) => s + e.amount, 0); const weekTotal = expenses.filter(e => { const d = new Date(`${e.date}T00:00:00`); return d >= weekStart && d <= now; }).reduce((s, e) => s + e.amount, 0); const byCategory = CATEGORIES.map(category => ({ category, value: expenses.filter(e => e.category === category).reduce((s, e) => s + e.amount, 0) })).filter(x => x.value > 0).sort((a, b) => b.value - a.value); return { expenses, total, todayTotal, weekTotal, byCategory, available: cycle.salary + cycle.balance, remaining: cycle.salary + cycle.balance - total }; }
 const csvCell = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
 const reportFilename = (cycle: Cycle, extension: string) => `kayal-expenses-${cycle.month}.${extension}`;
 function downloadCsv(cycle: Cycle) { const t = totals(cycle); const rows = [["Kayal Expenses Monthly Report", monthLabel(cycle.month)], ["Salary date", cycle.salaryDate], ["Salary", cycle.salary], ["Existing balance", cycle.balance], ["Total available", t.available], ["Total expenses", t.total], ["Remaining balance", t.remaining], [], ["Date", "Expense", "Category", "Payment method", "Amount", "Notes"], ...t.expenses.map(e => [e.date, e.name, e.category, e.payment, e.amount, e.notes])]; const csv = rows.map(row => row.map(cell => csvCell(cell ?? "")).join(",")).join("\\r\\n"); const blob = new Blob(["\\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = reportFilename(cycle, "csv"); anchor.click(); URL.revokeObjectURL(url); }
@@ -243,6 +243,7 @@ export default function Home({
                     payment: e.paymentMethod,
                     notes: e.notes || "",
                     valid: true,
+                    isDelete: e.isDelete ?? 0,
                   })),
                 };
               } catch {

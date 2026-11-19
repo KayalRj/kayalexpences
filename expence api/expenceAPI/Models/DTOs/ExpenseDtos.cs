@@ -11,6 +11,7 @@ public record ExpenseResponseDto(
     string PaymentMethod,
     string? Notes,
     Guid? SalaryCycleId,
+    int IsDelete,
     DateTime CreatedAt,
     DateTime? UpdatedAt
 );
@@ -66,4 +67,3 @@ public record UpdateExpenseDto(
 
     Guid? SalaryCycleId
 );
-

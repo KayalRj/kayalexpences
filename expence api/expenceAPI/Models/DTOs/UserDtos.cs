@@ -11,6 +11,7 @@ public record UserResponseDto(
     string? Place,
     decimal MonthlySalary,
     string Role,
+    int IsDelete,
     DateTime CreatedAt
 );
 
