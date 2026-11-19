@@ -1,10 +1,15 @@
-/* Copper Ledger design: warm parchment surfaces, burnished copper actions, editorial numbers, asymmetric workspace. */
+﻿/* Copper Ledger design: warm parchment surfaces, burnished copper actions, editorial numbers, asymmetric workspace. */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, Banknote, BarChart3, Bell, CalendarDays, Car, Check, ChevronRight, CircleDollarSign, ClipboardList, CreditCard, Edit3, ExternalLink, FileSpreadsheet, Film, Filter, GraduationCap, HeartPulse, Home as HomeIcon, Landmark, LayoutDashboard, Lock, LogOut, Menu, Moon, Plus, Quote, Receipt, Search, Settings2, ShieldCheck, ShoppingBag, Smartphone, Sun, Tag, Target, Trash2, TrendingUp, User, Users, Utensils, Wallet, X, Zap } from "lucide-react";
 import GoogleSheetsModal from "../../components/GoogleSheetsModal";
 import ProfileModal from "../../components/ProfileModal";
 import UserManagement from "../../components/UserManagement";
+import OverviewView from "./components/OverviewView";
+import ExpensesView from "./components/ExpensesView";
+import AnalyticsView from "./components/AnalyticsView";
+import BudgetsView from "./components/BudgetsView";
+import GoogleSheetsView from "./components/GoogleSheetsView";
 import { getGoogleSheetsConfig, GoogleSheetsConfig, syncSingleExpenseToGoogleSheets } from "../../lib/googleSheets";
 import { expenseService, salaryCycleService } from "../../services";
 import kayalLogo from "../../Assects/kayallogo2.png";
@@ -134,7 +139,7 @@ function totals(cycle: Cycle) { const expenses = cycle.expenses.filter(e => e.va
 const csvCell = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`;
 const reportFilename = (cycle: Cycle, extension: string) => `kayal-expenses-${cycle.month}.${extension}`;
 function downloadCsv(cycle: Cycle) { const t = totals(cycle); const rows = [["Kayal Expenses Monthly Report", monthLabel(cycle.month)], ["Salary date", cycle.salaryDate], ["Salary", cycle.salary], ["Existing balance", cycle.balance], ["Total available", t.available], ["Total expenses", t.total], ["Remaining balance", t.remaining], [], ["Date", "Expense", "Category", "Payment method", "Amount", "Notes"], ...t.expenses.map(e => [e.date, e.name, e.category, e.payment, e.amount, e.notes])]; const csv = rows.map(row => row.map(cell => csvCell(cell ?? "")).join(",")).join("\\r\\n"); const blob = new Blob(["\\uFEFF" + csv], { type: "text/csv;charset=utf-8" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = reportFilename(cycle, "csv"); anchor.click(); URL.revokeObjectURL(url); }
-function printPdf(cycle: Cycle) { const t = totals(cycle); const rows = t.expenses.map(e => `<tr><td>${dayLabel(e.date)}</td><td>${e.name}</td><td>${e.category}</td><td>${e.payment}</td><td>${money(e.amount)}</td><td>${e.notes}</td></tr>`).join(""); const win = window.open("", "_blank", "width=1000,height=800"); if (!win) return; win.document.write(`<!doctype html><html><head><title>${reportFilename(cycle, "pdf")}</title><style>body{font-family:Arial,sans-serif;color:#3f312b;padding:36px}h1{font-family:Georgia,serif;color:#8d4f2e;margin:0 0 6px}p{color:#806f62}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0}.summary div{border:1px solid #dfd2c3;padding:12px;background:#fbf8f3}.summary small{display:block;text-transform:uppercase;letter-spacing:.08em;color:#8d7b6e;font-size:10px}.summary strong{display:block;font:24px Georgia,serif;margin-top:5px}table{border-collapse:collapse;width:100%;font-size:11px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid #e7ded3}th{color:#8d7b6e;text-transform:uppercase;font-size:9px;letter-spacing:.08em}@media print{body{padding:0}.no-print{display:none}}</style></head><body><h1>Kayal Expenses</h1><p>${monthLabel(cycle.month)} · Salary cycle beginning ${dayLabel(cycle.salaryDate)}</p><div class="summary"><div><small>Total available</small><strong>${money(t.available)}</strong></div><div><small>Total expenses</small><strong>${money(t.total)}</strong></div><div><small>Remaining balance</small><strong>${money(t.remaining)}</strong></div></div><table><thead><tr><th>Date</th><th>Expense</th><th>Category</th><th>Payment</th><th>Amount</th><th>Notes</th></tr></thead><tbody>${rows || `<tr><td colspan="6">No valid expenses recorded for this month.</td></tr>`}</tbody></table><p class="no-print">Use your browser's print dialog and choose “Save as PDF”.</p></body></html>`); win.document.close(); win.focus(); setTimeout(() => win.print(), 250); }
+function printPdf(cycle: Cycle) { const t = totals(cycle); const rows = t.expenses.map(e => `<tr><td>${dayLabel(e.date)}</td><td>${e.name}</td><td>${e.category}</td><td>${e.payment}</td><td>${money(e.amount)}</td><td>${e.notes}</td></tr>`).join(""); const win = window.open("", "_blank", "width=1000,height=800"); if (!win) return; win.document.write(`<!doctype html><html><head><title>${reportFilename(cycle, "pdf")}</title><style>body{font-family:Arial,sans-serif;color:#3f312b;padding:36px}h1{font-family:Georgia,serif;color:#8d4f2e;margin:0 0 6px}p{color:#806f62}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0}.summary div{border:1px solid #dfd2c3;padding:12px;background:#fbf8f3}.summary small{display:block;text-transform:uppercase;letter-spacing:.08em;color:#8d7b6e;font-size:10px}.summary strong{display:block;font:24px Georgia,serif;margin-top:5px}table{border-collapse:collapse;width:100%;font-size:11px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid #e7ded3}th{color:#8d7b6e;text-transform:uppercase;font-size:9px;letter-spacing:.08em}@media print{body{padding:0}.no-print{display:none}}</style></head><body><h1>Kayal Expenses</h1><p>${monthLabel(cycle.month)} Â· Salary cycle beginning ${dayLabel(cycle.salaryDate)}</p><div class="summary"><div><small>Total available</small><strong>${money(t.available)}</strong></div><div><small>Total expenses</small><strong>${money(t.total)}</strong></div><div><small>Remaining balance</small><strong>${money(t.remaining)}</strong></div></div><table><thead><tr><th>Date</th><th>Expense</th><th>Category</th><th>Payment</th><th>Amount</th><th>Notes</th></tr></thead><tbody>${rows || `<tr><td colspan="6">No valid expenses recorded for this month.</td></tr>`}</tbody></table><p class="no-print">Use your browser's print dialog and choose â€œSave as PDFâ€.</p></body></html>`); win.document.close(); win.focus(); setTimeout(() => win.print(), 250); }
 
 function getAppBrandName() {
   const sessionEmail = sessionStorage.getItem("kayal_user_email");
@@ -186,7 +191,8 @@ export default function Home({
   const cleanPolujuiceImg = useTransparentImage(polujuiceImg);
   const cleanLetterImg = useTransparentImage(letterTaklImg);
   const [store, setStore] = useState<Store>(initialStore);
-  const [view, setView] = useState<"dashboard" | "history" | "users">("dashboard");
+  type ViewMode = "dashboard" | "expenses" | "analytics" | "budgets" | "history" | "users" | "sheets";
+  const [view, setView] = useState<ViewMode>("dashboard");
   const [mobileNav, setMobileNav] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [salaryOpen, setSalaryOpen] = useState(false);
@@ -278,7 +284,7 @@ export default function Home({
   const alertItems = useMemo(() => { if (!cycle || !stats) return []; const out: { tone: string; title: string; detail: string }[] = []; const { start, end } = cycleDays(cycle.salaryDate); const today = new Date(); const inCycle = today >= start && today <= end; if (inCycle && !stats.expenses.some(e => e.date === isoToday())) out.push({ tone: "amber", title: "Daily expense entry pending", detail: "No expense has been recorded for today. Keep the month visible." }); if (stats.todayTotal > cycle.budgets.daily) out.push({ tone: "terracotta", title: "Daily budget exceeded", detail: `You have spent ${money(stats.todayTotal)} today against ${money(cycle.budgets.daily)}.` }); if (stats.weekTotal > cycle.budgets.weekly) out.push({ tone: "terracotta", title: "Weekly budget exceeded", detail: `You are ${money(stats.weekTotal - cycle.budgets.weekly)} over the weekly budget.` }); if (stats.total > cycle.budgets.monthly) out.push({ tone: "terracotta", title: "Monthly budget exceeded", detail: `You are ${money(stats.total - cycle.budgets.monthly)} over the monthly budget.` }); if (stats.available > 0 && stats.remaining / stats.available < store.lowBalanceThreshold / 100) out.push({ tone: "terracotta", title: "Low balance warning", detail: "Your remaining balance is getting low." }); if (!out.length) out.push({ tone: "olive", title: "Budget is under control", detail: "No threshold has been crossed in this salary cycle." }); return out; }, [cycle, stats, store.lowBalanceThreshold]);
 
   const updateCycle = (next: Cycle) => setStore(s => ({ ...s, cycles: s.cycles.map(c => c.id === next.id ? next : c) }));
-  const validate = (e: Expense) => { const errors: Record<string, string> = {}; if (!e.date) errors.date = "Choose a date."; else if (cycle && !validExpense({ ...e, name: e.name || "ok", category: e.category || "Food", amount: e.amount || 1, payment: e.payment || "Cash", notes: e.notes || "valid note" }, cycle)) { const { start, end } = cycleDays(cycle.salaryDate); const d = new Date(`${e.date}T00:00:00`); if (d < start || d > end) errors.date = `Date must be between ${dayLabel(cycle.salaryDate)} and ${dayLabel(end.toISOString().slice(0, 10))}.`; } if (e.name.trim().length < 2) errors.name = "Use at least 2 characters."; if (!CATEGORIES.includes(e.category)) errors.category = "Select a category."; if (!Number.isFinite(Number(e.amount)) || Number(e.amount) <= 0) errors.amount = "Enter an amount greater than ₹0."; if (!PAYMENTS.includes(e.payment)) errors.payment = "Select a payment method."; if (e.notes.trim().length < 5) errors.notes = "A meaningful note needs at least 5 characters."; else if (e.notes.trim().length > 250) errors.notes = "Keep notes below 250 characters."; return errors; };
+  const validate = (e: Expense) => { const errors: Record<string, string> = {}; if (!e.date) errors.date = "Choose a date."; else if (cycle && !validExpense({ ...e, name: e.name || "ok", category: e.category || "Food", amount: e.amount || 1, payment: e.payment || "Cash", notes: e.notes || "valid note" }, cycle)) { const { start, end } = cycleDays(cycle.salaryDate); const d = new Date(`${e.date}T00:00:00`); if (d < start || d > end) errors.date = `Date must be between ${dayLabel(cycle.salaryDate)} and ${dayLabel(end.toISOString().slice(0, 10))}.`; } if (e.name.trim().length < 2) errors.name = "Use at least 2 characters."; if (!CATEGORIES.includes(e.category)) errors.category = "Select a category."; if (!Number.isFinite(Number(e.amount)) || Number(e.amount) <= 0) errors.amount = "Enter an amount greater than â‚¹0."; if (!PAYMENTS.includes(e.payment)) errors.payment = "Select a payment method."; if (e.notes.trim().length < 5) errors.notes = "A meaningful note needs at least 5 characters."; else if (e.notes.trim().length > 250) errors.notes = "Keep notes below 250 characters."; return errors; };
   const saveExpense = async (ev: React.FormEvent) => {
     ev.preventDefault();
     if (!cycle) return;
@@ -302,7 +308,7 @@ export default function Home({
           notes: expense.notes,
           salaryCycleId: cycle.id,
         });
-        toast.success("Expense updated in Database! 💾");
+        toast.success("Expense updated in Database! ðŸ’¾");
       } else {
         // Create in PostgreSQL Database
         const res = await expenseService.create({
@@ -315,7 +321,7 @@ export default function Home({
           salaryCycleId: cycle.id,
         });
         savedId = res.id;
-        toast.success("Expense saved to PostgreSQL Database! 💾");
+        toast.success("Expense saved to PostgreSQL Database! ðŸ’¾");
       }
     } catch (apiErr: any) {
       console.warn("Backend API not reachable, saved locally:", apiErr);
@@ -357,7 +363,7 @@ export default function Home({
 
     try {
       await expenseService.delete(id);
-      toast.success("Expense deleted from Database! 🗑️");
+      toast.success("Expense deleted from Database! ðŸ—‘ï¸");
     } catch (apiErr) {
       console.warn("API delete:", apiErr);
       toast.success("Expense deleted");
@@ -405,7 +411,7 @@ export default function Home({
           notes: salary.notes,
           isCurrentCycle: true,
         });
-        toast.success(`${monthLabel(salary.month)} cycle updated in Database! 💾`);
+        toast.success(`${monthLabel(salary.month)} cycle updated in Database! ðŸ’¾`);
       } else {
         // Create in PostgreSQL Database
         const res = await salaryCycleService.create({
@@ -420,7 +426,7 @@ export default function Home({
           isCurrentCycle: true,
         });
         savedCycleId = res.id;
-        toast.success(`${monthLabel(salary.month)} cycle saved to PostgreSQL Database! 💾`);
+        toast.success(`${monthLabel(salary.month)} cycle saved to PostgreSQL Database! ðŸ’¾`);
       }
     } catch (apiErr) {
       console.warn("Salary API save error:", apiErr);
@@ -499,7 +505,7 @@ export default function Home({
 
     try {
       await salaryCycleService.delete(cycle.id);
-      toast.success("Salary cycle deleted from Database! 🗑️");
+      toast.success("Salary cycle deleted from Database! ðŸ—‘ï¸");
     } catch (apiErr) {
       console.warn("API salary delete:", apiErr);
       toast.success("Salary cycle deleted");
@@ -566,21 +572,45 @@ export default function Home({
           </div>
         </div>
 
-        <div className="rail-label" style={{ color: "#a88c78", margin: "10px 0 6px" }}>Workspace</div>
+        <div className="rail-label" style={{ color: isLight ? "#7a5c48" : "#a88c78", margin: "10px 0 6px" }}>Workspace</div>
 
         <button
           className={view === "dashboard" ? "nav-item active" : "nav-item"}
           onClick={() => { setView("dashboard"); setMobileNav(false); }}
         >
-          <img src={cleanPolujuiceImg} alt="Polyjuice" style={{ width: "20px", height: "20px", objectFit: "contain", filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.4))" }} />
+          <LayoutDashboard size={18} />
           <span>Overview</span>
+        </button>
+
+        <button
+          className={view === "expenses" ? "nav-item active" : "nav-item"}
+          onClick={() => { setView("expenses"); setMobileNav(false); }}
+        >
+          <Receipt size={18} />
+          <span>Expenses</span>
+        </button>
+
+        <button
+          className={view === "analytics" ? "nav-item active" : "nav-item"}
+          onClick={() => { setView("analytics"); setMobileNav(false); }}
+        >
+          <BarChart3 size={18} />
+          <span>Analytics</span>
+        </button>
+
+        <button
+          className={view === "budgets" ? "nav-item active" : "nav-item"}
+          onClick={() => { setView("budgets"); setMobileNav(false); }}
+        >
+          <Target size={18} />
+          <span>Budgets</span>
         </button>
 
         <button
           className={view === "history" ? "nav-item active" : "nav-item"}
           onClick={() => { setView("history"); setMobileNav(false); }}
         >
-          <img src={cleanPolujuiceImg} alt="Polyjuice" style={{ width: "20px", height: "20px", objectFit: "contain", filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.4))" }} />
+          <CalendarDays size={18} />
           <span>Monthly history</span>
         </button>
 
@@ -588,15 +618,15 @@ export default function Home({
           className={view === "users" ? "nav-item active" : "nav-item"}
           onClick={() => { setView("users"); setMobileNav(false); }}
         >
-          <img src={cleanPolujuiceImg} alt="Polyjuice" style={{ width: "20px", height: "20px", objectFit: "contain", filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.4))" }} />
+          <Users size={18} />
           <span>User Profiles</span>
         </button>
 
         <button
-          className="nav-item"
-          onClick={() => { setSheetsModalOpen(true); setMobileNav(false); }}
+          className={view === "sheets" ? "nav-item active" : "nav-item"}
+          onClick={() => { setView("sheets"); setMobileNav(false); }}
         >
-          <img src={cleanPolujuiceImg} alt="Polyjuice" style={{ width: "20px", height: "20px", objectFit: "contain", filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.4))" }} />
+          <FileSpreadsheet size={18} />
           <span>Google Sheets</span>
         </button>
 
@@ -714,9 +744,23 @@ export default function Home({
               }}
             />
             <div>
-              <p className="eyebrow" style={{ color: isLight ? "#7a5c48" : "#8d7b6e" }}>Personal finance ledger</p>
+              <p className="eyebrow" style={{ color: isLight ? "#7a5c48" : "#8d7b6e" }}>
+                {view === "dashboard" ? "Cycle pulse & quick summary"
+                  : view === "expenses" ? "Manage & filter recorded expenses"
+                  : view === "analytics" ? "Category mix & payment breakdowns"
+                  : view === "budgets" ? "Daily, weekly & monthly allowances"
+                  : view === "history" ? "Past salary months & archives"
+                  : view === "users" ? "Manage user accounts & credentials"
+                  : "Cloud spreadsheet integration"}
+              </p>
               <h1 className="topbar-title" style={{ color: isLight ? "#1f1610" : "white", fontSize: "1.85rem", marginTop: "2px" }}>
-                {view === "dashboard" ? "Keep the month visible." : view === "history" ? "Monthly history" : "User Profiles & Accounts"}
+                {view === "dashboard" ? "Overview & Workspace"
+                  : view === "expenses" ? "Expense Ledger"
+                  : view === "analytics" ? "Spending Analytics"
+                  : view === "budgets" ? "Budget Controls"
+                  : view === "history" ? "Monthly History"
+                  : view === "users" ? "User Profiles & Accounts"
+                  : "Google Sheets Sync"}
               </h1>
             </div>
           </div>
@@ -808,369 +852,95 @@ export default function Home({
           />
         ) : !cycle ? (
           <EmptyState onCreate={openNewSalary} hatImg={cleanHatImg} />
+        ) : view === "expenses" ? (
+          <ExpensesView
+            cycle={cycle}
+            expenses={cycle.expenses}
+            filtered={filtered}
+            filters={filters}
+            onSetFilters={setFilters}
+            onOpenAddExpense={() => {
+              setExpense(emptyExpense());
+              setEditing(null);
+              setExpenseOpen(true);
+            }}
+            onEditExpense={e => {
+              setExpense(e);
+              setEditing(e);
+              setExpenseOpen(true);
+            }}
+            onDeleteExpense={deleteExpense}
+            onDownloadCsv={() => downloadCsv(cycle)}
+            onPrintPdf={() => printPdf(cycle)}
+            onOpenSheetsModal={() => setSheetsModalOpen(true)}
+            isLight={isLight}
+            money={money}
+            dayLabel={dayLabel}
+            monthLabel={monthLabel}
+            getCategoryIcon={getCategoryIcon}
+            getPaymentIcon={getPaymentIcon}
+            CATEGORIES={CATEGORIES}
+            PAYMENTS={PAYMENTS}
+          />
+        ) : view === "analytics" ? (
+          <AnalyticsView
+            cycle={cycle}
+            stats={stats!}
+            isLight={isLight}
+            money={money}
+            monthLabel={monthLabel}
+            getCategoryIcon={getCategoryIcon}
+            getPaymentIcon={getPaymentIcon}
+            onNavigateToExpenses={() => setView("expenses")}
+          />
+        ) : view === "budgets" ? (
+          <BudgetsView
+            cycle={cycle}
+            stats={stats!}
+            isLight={isLight}
+            money={money}
+            dayLabel={dayLabel}
+            monthLabel={monthLabel}
+            cycleDays={cycleDays}
+            onOpenEditSalary={openEditSalary}
+            onNavigateToExpenses={() => setView("expenses")}
+          />
+        ) : view === "sheets" ? (
+          <GoogleSheetsView
+            cycle={cycle}
+            config={sheetsConfig}
+            onUpdateConfig={setSheetsConfig}
+            isLight={isLight}
+            money={money}
+            monthLabel={monthLabel}
+          />
         ) : (
-          <>
-            <section
-              className="cycle-heading anim-fade-up anim-delay-1"
-              style={{
-                background: isLight
-                  ? "linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(250, 243, 235, 0.95))"
-                  : "linear-gradient(135deg, rgba(26, 15, 10, 0.85), rgba(16, 9, 6, 0.9))",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                padding: "20px 26px",
-                borderRadius: "16px",
-                border: isLight ? "1.5px solid rgba(184, 106, 60, 0.3)" : "1px solid rgba(198, 116, 68, 0.35)",
-                boxShadow: isLight
-                  ? "0 12px 35px rgba(80, 50, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)"
-                  : "0 16px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
-                marginBottom: "24px"
-              }}
-            >
-              <div>
-                <p className="eyebrow" style={{ display: "flex", alignItems: "center", gap: "6px", color: isLight ? "#8c5230" : "#e59b6e" }}>
-                  <CalendarDays size={14} /> Active salary cycle · {dayLabel(cycle.salaryDate)} → {dayLabel(cycleDays(cycle.salaryDate).end.toISOString().slice(0, 10))}
-                </p>
-                <h2 style={{ fontSize: "1.5rem", marginTop: "4px", color: isLight ? "#1f1610" : "#ffffff", fontWeight: 800 }}>
-                  {monthLabel(cycle.month)} <span style={{ fontSize: "0.95rem", color: isLight ? "#6e5445" : "#dfc7b5", fontWeight: "normal" }}>/{cycle.notes || "Your current page"}</span>
-                </h2>
-              </div>
-              <div className="cycle-actions">
-                <div className="export-actions">
-                  <button className="button export" onClick={() => setSheetsModalOpen(true)} title="Link & Sync Google Sheets" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                    <FileSpreadsheet size={14} /> Sheets
-                  </button>
-                  <button className="button export" onClick={() => downloadCsv(cycle)} title="Download CSV report">CSV</button>
-                  <button className="button export" onClick={() => printPdf(cycle)} title="Print or save as PDF">PDF</button>
-                  <button className="button export" onClick={openEditSalary} title="Edit cycle"><Edit3 size={14} /></button>
-                  <button className="button export" onClick={deleteSalary} title="Delete cycle"><Trash2 size={14} /></button>
-                </div>
-                <button
-                  className="button primary record-btn"
-                  onClick={() => {
-                    setExpense(emptyExpense());
-                    setEditing(null);
-                    setExpenseOpen(true);
-                  }}
-                  style={{
-                    borderRadius: "10px",
-                    background: "linear-gradient(135deg, #b86a3c, #8c4c28)",
-                    color: "#ffffff",
-                    boxShadow: "0 6px 18px rgba(184, 106, 60, 0.35)",
-                    border: "none"
-                  }}
-                >
-                  <Plus size={16} /> Record expense
-                </button>
-              </div>
-            </section>
-
-            <section className="alerts anim-fade-up anim-delay-2">
-              {alertItems.map((a, i) => (
-                <div className={`alert ${a.tone}`} key={i}>
-                  <div className="alert-icon">
-                    {a.tone === "olive" ? <Check size={16} /> : a.tone === "amber" ? <Bell size={16} /> : <AlertTriangle size={16} />}
-                  </div>
-                  <div>
-                    <strong>{a.title}</strong>
-                    <p>{a.detail}</p>
-                  </div>
-                </div>
-              ))}
-            </section>
-
-            <section className="dashboard-grid anim-fade-up anim-delay-3">
-              <div
-                className="ledger-panel hero-card"
-                style={{
-                  background: isLight
-                    ? `linear-gradient(135deg, rgba(240, 249, 255, 0.95), rgba(254, 243, 199, 0.95)), url(${expectoPatronumImg})`
-                    : `linear-gradient(135deg, rgba(10, 18, 30, 0.82), rgba(27, 15, 9, 0.88)), url(${expectoPatronumImg})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center 35%",
-                  backdropFilter: "blur(24px)",
-                  WebkitBackdropFilter: "blur(24px)",
-                  borderRadius: "18px",
-                  padding: "28px 32px",
-                  color: isLight ? "#0c4a6e" : "#fff",
-                  border: isLight ? "1.5px solid rgba(56, 189, 248, 0.6)" : "1.5px solid rgba(56, 189, 248, 0.4)",
-                  boxShadow: isLight ? "0 18px 45px rgba(14, 165, 233, 0.12)" : "0 25px 60px rgba(0, 0, 0, 0.45)"
-                }}
-              >
-                <div className="panel-kicker">
-                  <span style={{ color: isLight ? "#0369a1" : "#7dd3fc", letterSpacing: ".16em", fontSize: "11px", fontWeight: 700 }}>EXPECTO PATRONUM · CYCLE PULSE</span>
-                  <span className="stamp live-pulse" style={{ background: isLight ? "rgba(2, 132, 199, 0.15)" : "rgba(56, 189, 248, 0.25)", color: isLight ? "#0284c7" : "#e0f2fe", border: isLight ? "1px solid rgba(56, 189, 248, 0.5)" : "1px solid rgba(125, 211, 252, 0.4)", borderRadius: "6px" }}>Live</span>
-                </div>
-                <div className="hero-balance" style={{ margin: "20px 0" }}>
-                  <div>
-                    <small style={{ color: isLight ? "#0369a1" : "#bae6fd", textTransform: "uppercase", letterSpacing: ".1em", fontSize: "11px", fontWeight: 700 }}>Remaining balance</small>
-                    <strong style={{ color: isLight ? "#0c4a6e" : "#fff", fontSize: "clamp(34px, 5.5vw, 62px)", textShadow: isLight ? "none" : "0 4px 20px rgba(14, 165, 233, 0.5)", display: "block" }}>{money(stats?.remaining || 0)}</strong>
-                    <span style={{ color: isLight ? "#075985" : "#e0f2fe", fontSize: "12px" }}>{money(stats?.total || 0)} spent from {money(stats?.available || 0)}</span>
-                  </div>
-                  <Wallet className="hero-wallet-icon" size={52} strokeWidth={1.2} style={{ color: isLight ? "#0284c7" : "#7dd3fc", filter: isLight ? "drop-shadow(0 4px 12px rgba(2, 132, 199, 0.3))" : "drop-shadow(0 4px 16px rgba(56, 189, 248, 0.6))" }} />
-                </div>
-                <div className="progress-track" style={{ height: "10px", background: isLight ? "rgba(2, 132, 199, 0.15)" : "rgba(255, 255, 255, 0.14)", borderRadius: "12px", margin: "20px 0 12px" }}>
-                  <div style={{ width: `${Math.min(100, ((stats?.total || 0) / Math.max(1, stats?.available || 1)) * 100)}%`, background: "linear-gradient(90deg, #0284c7, #38bdf8)", borderRadius: "12px" }} />
-                </div>
-                <div className="hero-foot" style={{ color: isLight ? "#075985" : "#e0f2fe", fontSize: "12px" }}>
-                  <span><i className="legend copper" style={{ background: "#38bdf8" }} /> Spent {Math.round(((stats?.total || 0) / Math.max(1, stats?.available || 1)) * 100)}%</span>
-                  <span><i className="legend olive" style={{ background: isLight ? "#cbd5e1" : "#f0e2d3" }} /> Available {money(stats?.remaining || 0)}</span>
-                </div>
-              </div>
-
-              <div className="summary-stack">
-                <StatCard icon={<CircleDollarSign size={22} />} label="Salary" value={money(cycle.salary)} isLight={isLight} />
-                <StatCard icon={<ArrowUpRight size={22} />} label="Existing balance" value={money(cycle.balance)} isLight={isLight} />
-                <StatCard icon={<ArrowDownRight size={22} />} label="Total expenses" value={money(stats?.total || 0)} isLight={isLight} />
-              </div>
-            </section>
-
-            <section className="budget-row anim-fade-up anim-delay-4">
-              <BudgetCard label="Today" value={stats?.todayTotal || 0} budget={cycle.budgets.daily} tone="copper" isLight={isLight} />
-              <BudgetCard label="This week" value={stats?.weekTotal || 0} budget={cycle.budgets.weekly} tone="olive" isLight={isLight} />
-              <BudgetCard label="This month" value={stats?.total || 0} budget={cycle.budgets.monthly} tone="terracotta" isLight={isLight} />
-            </section>
-
-            <section className="lower-grid anim-fade-up anim-delay-5">
-              <div
-                className="panel table-panel"
-                style={{
-                  background: isLight
-                    ? "rgba(255, 255, 255, 0.95)"
-                    : "linear-gradient(145deg, rgba(24, 6, 14, 0.94) 0%, rgba(14, 3, 8, 0.96) 100%)",
-                  backdropFilter: "blur(24px)",
-                  WebkitBackdropFilter: "blur(24px)",
-                  borderRadius: "18px",
-                  border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(225, 29, 72, 0.45)",
-                  boxShadow: isLight
-                    ? "0 14px 40px rgba(80, 50, 30, 0.07)"
-                    : "0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(225, 29, 72, 0.16)"
-                }}
-              >
-                <div className="panel-header">
-                  <div>
-                    <p className="eyebrow" style={{ color: isLight ? "#dc2626" : "#ff3366", display: "flex", alignItems: "center", gap: "6px" }}><span>🩸</span> Recent entries</p>
-                    <h3 style={{ fontSize: "1.35rem", color: isLight ? "#1f1610" : "#ffffff", textShadow: isLight ? "none" : "0 0 12px rgba(225, 29, 72, 0.35)" }}>Expense register</h3>
-                  </div>
-                  <button
-                    className="icon-button"
-                    title="Record expense"
-                    onClick={() => {
-                      setExpense(emptyExpense());
-                      setEditing(null);
-                      setExpenseOpen(true);
-                    }}
-                    style={{
-                      borderRadius: "10px",
-                      width: "36px",
-                      height: "36px",
-                      background: "linear-gradient(135deg, #e11d48, #881337)",
-                      color: "#fff",
-                      border: "1px solid rgba(255, 100, 130, 0.45)",
-                      boxShadow: "0 4px 14px rgba(225, 29, 72, 0.4)"
-                    }}
-                  >
-                    <Plus size={18} />
-                  </button>
-                </div>
-
-                <div className="filters" style={{ marginBottom: "16px" }}>
-                  <div className="searchbox" style={{ background: isLight ? "#ffffff" : "rgba(32, 9, 20, 0.9)", border: isLight ? "1.5px solid #dcc6b5" : "1.5px solid rgba(225, 29, 72, 0.35)", borderRadius: "9px" }}>
-                    <Search size={15} style={{ color: isLight ? "#8c5230" : "#fda4af" }} />
-                    <input
-                      placeholder="Search entries or notes"
-                      value={filters.search}
-                      onChange={e => setFilters({ ...filters, search: e.target.value })}
-                      style={{ color: isLight ? "#1f1610" : "#ffffff" }}
-                    />
-                  </div>
-                  <select
-                    value={filters.category}
-                    onChange={e => setFilters({ ...filters, category: e.target.value })}
-                    style={{ borderRadius: "9px", background: isLight ? "#ffffff" : "rgba(32, 9, 20, 0.95)", color: isLight ? "#1f1610" : "#fda4af", border: isLight ? "1.5px solid #dcc6b5" : "1.5px solid rgba(225, 29, 72, 0.35)", colorScheme: isLight ? "light" : "dark" }}
-                  >
-                    <option value="">All categories</option>
-                    {CATEGORIES.map(x => (
-                      <option key={x} style={{ background: isLight ? "#ffffff" : "#18050d", color: isLight ? "#1f1610" : "#ffffff" }}>{x}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={filters.payment}
-                    onChange={e => setFilters({ ...filters, payment: e.target.value })}
-                    style={{ borderRadius: "9px", background: isLight ? "#ffffff" : "rgba(32, 9, 20, 0.95)", color: isLight ? "#1f1610" : "#fda4af", border: isLight ? "1.5px solid #dcc6b5" : "1.5px solid rgba(225, 29, 72, 0.35)", colorScheme: isLight ? "light" : "dark" }}
-                  >
-                    <option value="">All payments</option>
-                    {PAYMENTS.map(x => (
-                      <option key={x} style={{ background: isLight ? "#ffffff" : "#18050d", color: isLight ? "#1f1610" : "#ffffff" }}>{x}</option>
-                    ))}
-                  </select>
-                  <Filter size={16} style={{ color: isLight ? "#8c5230" : "#fda4af" }} />
-                </div>
-
-                {filtered.length ? (
-                  <div className="table-wrap">
-                    <table>
-                      <thead>
-                        <tr style={{ background: "linear-gradient(90deg, rgba(76, 10, 30, 0.95), rgba(45, 6, 18, 0.95))" }}>
-                          <th style={{ color: "#fda4af", borderBottom: "1.5px solid rgba(225, 29, 72, 0.45)" }}>Date</th>
-                          <th style={{ color: "#fda4af", borderBottom: "1.5px solid rgba(225, 29, 72, 0.45)" }}>Expense</th>
-                          <th style={{ color: "#fda4af", borderBottom: "1.5px solid rgba(225, 29, 72, 0.45)" }}>Category</th>
-                          <th style={{ color: "#fda4af", borderBottom: "1.5px solid rgba(225, 29, 72, 0.45)" }}>Payment</th>
-                          <th style={{ color: "#fda4af", borderBottom: "1.5px solid rgba(225, 29, 72, 0.45)" }}>Amount</th>
-                          <th style={{ borderBottom: "1.5px solid rgba(225, 29, 72, 0.45)" }} />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filtered.map(e => (
-                          <tr key={e.id} style={{ borderBottom: "1px solid rgba(225, 29, 72, 0.16)" }}>
-                            <td style={{ color: "#fff1f2" }}>{dayLabel(e.date)}</td>
-                            <td>
-                              <strong style={{ color: "#ffffff" }}>{e.name}</strong>
-                              <small style={{ color: "#fda4af" }}>{e.notes}</small>
-                            </td>
-                            <td>
-                              <span
-                                className="tag"
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  padding: "5px 10px",
-                                  background: "linear-gradient(135deg, rgba(136, 19, 55, 0.8), rgba(76, 5, 25, 0.8))",
-                                  color: "#ffe4e6",
-                                  borderRadius: "8px",
-                                  fontWeight: 700,
-                                  border: "1px solid rgba(244, 63, 94, 0.4)",
-                                  boxShadow: "0 2px 8px rgba(225, 29, 72, 0.25)"
-                                }}
-                              >
-                                {getCategoryIcon(e.category)} {e.category}
-                              </span>
-                            </td>
-                            <td>
-                              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: isLight ? "#5c3c26" : "#fda4af", fontWeight: 600 }}>
-                                {getPaymentIcon(e.payment)} {e.payment}
-                              </span>
-                            </td>
-                            <td className="amount" style={{ color: isLight ? "#dc2626" : "#ff3366", fontSize: "15px", fontWeight: 800, textShadow: isLight ? "none" : "0 0 10px rgba(255, 51, 102, 0.4)" }}>
-                              {money(e.amount)}
-                            </td>
-                            <td>
-                              <div className="row-actions">
-                                <button
-                                  onClick={() => { setExpense(e); setEditing(e); setExpenseOpen(true); }}
-                                  style={{ border: isLight ? "1px solid #fecaca" : "1px solid rgba(225, 29, 72, 0.3)", background: isLight ? "#fef2f2" : "rgba(225, 29, 72, 0.15)", color: isLight ? "#b91c1c" : "#fda4af", borderRadius: "6px", padding: "5px", cursor: "pointer" }}
-                                  title="Edit entry"
-                                >
-                                  <Edit3 size={14} />
-                                </button>
-                                <button
-                                  onClick={() => deleteExpense(e.id)}
-                                  style={{ border: isLight ? "1px solid #fecaca" : "1px solid rgba(225, 29, 72, 0.3)", background: isLight ? "#fef2f2" : "rgba(225, 29, 72, 0.15)", color: isLight ? "#b91c1c" : "#fda4af", borderRadius: "6px", padding: "5px", cursor: "pointer" }}
-                                  title="Delete entry"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="empty-table">
-                    <ClipboardList size={24} style={{ color: isLight ? "#dc2626" : "#e11d48", filter: isLight ? "none" : "drop-shadow(0 0 10px rgba(225, 29, 72, 0.6))" }} />
-                    <strong style={{ color: isLight ? "#1f1610" : "#ffffff", textShadow: isLight ? "none" : "0 0 10px rgba(225, 29, 72, 0.3)" }}>No entries yet</strong>
-                    <p style={{ color: isLight ? "#7a5c48" : "#fda4af" }}>Your manually entered expenses will appear here.</p>
-                    <button
-                      className="button primary"
-                      onClick={() => setExpenseOpen(true)}
-                      style={{ background: "linear-gradient(135deg, #b86a3c, #8c4c28)", color: "#fff", border: "none", borderRadius: "10px", padding: "8px 18px", fontWeight: 700 }}
-                    >
-                      Record first expense
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="side-column">
-                <div
-                  className="panel category-panel"
-                  style={{
-                    background: isLight
-                      ? "rgba(255, 255, 255, 0.95)"
-                      : "linear-gradient(135deg, rgba(26, 15, 10, 0.85), rgba(16, 9, 6, 0.9))",
-                    backdropFilter: "blur(20px)",
-                    WebkitBackdropFilter: "blur(20px)",
-                    borderRadius: "18px",
-                    border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1px solid rgba(198, 116, 68, 0.35)",
-                    boxShadow: isLight
-                      ? "0 10px 30px rgba(80, 50, 30, 0.06)"
-                      : "0 14px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06)"
-                  }}
-                >
-                  <div className="panel-header">
-                    <div>
-                      <p className="eyebrow" style={{ color: isLight ? "#8c5230" : "#e59b6e" }}>Where it goes</p>
-                      <h3 style={{ fontSize: "1.35rem", color: isLight ? "#1f1610" : "#ffffff" }}>Category mix</h3>
-                    </div>
-                  </div>
-                  {stats?.byCategory.length ? (
-                    <div className="category-list">
-                      {stats.byCategory.slice(0, 5).map((x, i) => {
-                        const pct = Math.round((x.value / Math.max(1, stats.total)) * 100);
-                        return (
-                          <div className="category-line" key={x.category} style={{ marginBottom: "16px" }}>
-                            <div>
-                              <span className={`category-dot dot-${i}`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "26px", height: "26px", borderRadius: "8px", boxShadow: "0 2px 6px rgba(0,0,0,0.15)" }}>{getCategoryIcon(x.category)}</span>
-                              <strong style={{ marginLeft: "8px", color: isLight ? "#1f1610" : "#ffffff" }}>{x.category}</strong>
-                              <span style={{ fontSize: "10px", padding: "3px 8px", background: "linear-gradient(135deg, #b86a3c, #8c4c28)", color: "#fff", borderRadius: "6px", fontWeight: 800, marginLeft: "auto" }}>{pct}%</span>
-                              <em style={{ marginLeft: "10px", color: isLight ? "#5c3c26" : "#dfc7b5", fontWeight: 700 }}>{money(x.value)}</em>
-                            </div>
-                            <div className="mini-track" style={{ height: "7px", marginTop: "8px", borderRadius: "10px", background: isLight ? "#eee3d8" : "rgba(255, 255, 255, 0.12)" }}>
-                              <i style={{ width: `${pct}%`, borderRadius: "10px" }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="muted" style={{ color: isLight ? "#6e5445" : "#dfc7b5" }}>Category detail will develop as you record the month.</p>
-                  )}
-                </div>
-
-                <div
-                  className="panel history-tease"
-                  style={{
-                    background: isLight
-                      ? "rgba(255, 255, 255, 0.95)"
-                      : "linear-gradient(135deg, rgba(26, 15, 10, 0.85), rgba(16, 9, 6, 0.9))",
-                    backdropFilter: "blur(20px)",
-                    WebkitBackdropFilter: "blur(20px)",
-                    borderRadius: "18px",
-                    border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1px solid rgba(198, 116, 68, 0.35)",
-                    boxShadow: isLight
-                      ? "0 10px 30px rgba(80, 50, 30, 0.06)"
-                      : "0 14px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06)"
-                  }}
-                >
-                  <div>
-                    <p className="eyebrow" style={{ color: isLight ? "#8c5230" : "#e59b6e" }}>Continuity</p>
-                    <h3 style={{ color: isLight ? "#1f1610" : "#ffffff" }}>Previous pages</h3>
-                  </div>
-                  <p style={{ color: isLight ? "#6e5445" : "#dfc7b5" }}>
-                    {store.cycles.length > 1
-                      ? `${store.cycles.length - 1} earlier salary cycle${store.cycles.length > 2 ? "s" : ""} saved.`
-                      : "Your first month starts here."}
-                  </p>
-                  <button className="text-button" onClick={() => setView("history")} style={{ color: isLight ? "#b86a3c" : "#e59b6e", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                    Open history <ChevronRight size={15} />
-                  </button>
-                </div>
-              </div>
-            </section>
-          </>
+          <OverviewView
+            cycle={cycle}
+            stats={stats!}
+            alertItems={alertItems}
+            isLight={isLight}
+            money={money}
+            dayLabel={dayLabel}
+            monthLabel={monthLabel}
+            cycleDays={cycleDays}
+            expectoPatronumImg={expectoPatronumImg}
+            onOpenAddExpense={() => {
+              setExpense(emptyExpense());
+              setEditing(null);
+              setExpenseOpen(true);
+            }}
+            onOpenEditSalary={openEditSalary}
+            onDeleteSalary={deleteSalary}
+            onOpenSheetsModal={() => setSheetsModalOpen(true)}
+            onDownloadCsv={() => downloadCsv(cycle)}
+            onPrintPdf={() => printPdf(cycle)}
+            onNavigate={setView}
+            getCategoryIcon={getCategoryIcon}
+            getPaymentIcon={getPaymentIcon}
+            StatCard={StatCard}
+            BudgetCard={BudgetCard}
+          />
         )}
       </main>
 
@@ -1202,7 +972,7 @@ export default function Home({
             </div>
             {cycle && stats && (
               <button type="button" className="balance-suggestion" onClick={() => setSalary({ ...salary, balance: String(stats.remaining) })}>
-                <Check size={15} /> Use previous remaining balance · {money(stats.remaining)}
+                <Check size={15} /> Use previous remaining balance Â· {money(stats.remaining)}
               </button>
             )}
             <label className="field">
@@ -1426,7 +1196,7 @@ function History({
       >
         <div>
           <p className="eyebrow" style={{ display: "flex", alignItems: "center", gap: "6px", color: isLight ? "#8c5230" : "#e59b6e", margin: "0 0 4px" }}>
-            <CalendarDays size={14} /> Preserved History · Archive Timeline
+            <CalendarDays size={14} /> Preserved History Â· Archive Timeline
           </p>
           <h2 style={{ fontSize: "1.6rem", margin: "0 0 6px", color: isLight ? "#1f1610" : "#ffffff", fontWeight: 800 }}>
             Every Month, Kept Intact
@@ -1618,7 +1388,7 @@ function History({
                     </span>
                     {c.notes && (
                       <span style={{ fontSize: "11px", color: "#dfc7b5", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "220px" }}>
-                        · {c.notes}
+                        Â· {c.notes}
                       </span>
                     )}
                   </div>
@@ -1626,7 +1396,7 @@ function History({
                     {monthLabel(c.month)}
                   </strong>
                   <small style={{ color: "#dfc7b5", fontSize: "11px", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
-                    <CalendarDays size={12} style={{ color: "#e59b6e" }} /> {dayLabel(c.salaryDate)} start · {c.expenses.length} {c.expenses.length === 1 ? "expense" : "expenses"}
+                    <CalendarDays size={12} style={{ color: "#e59b6e" }} /> {dayLabel(c.salaryDate)} start Â· {c.expenses.length} {c.expenses.length === 1 ? "expense" : "expenses"}
                   </small>
                 </div>
 
@@ -1783,9 +1553,9 @@ function EmptyState({ onCreate, hatImg }: { onCreate: () => void; hatImg?: strin
           {/* Circular backdrop halo */}
           <div className="empty-halo" />
           {/* Sparkles */}
-          <span style={{ position: "absolute", left: "20px", top: "25px", color: "#e59b6e", fontSize: "22px", zIndex: 6, opacity: 0.9 }}>✦</span>
-          <span style={{ position: "absolute", right: "30px", top: "15px", color: "#e59b6e", fontSize: "16px", zIndex: 6, opacity: 0.9 }}>✦</span>
-          <span style={{ position: "absolute", left: "10px", bottom: "40px", color: "#e59b6e", fontSize: "18px", zIndex: 6, opacity: 0.9 }}>✦</span>
+          <span style={{ position: "absolute", left: "20px", top: "25px", color: "#e59b6e", fontSize: "22px", zIndex: 6, opacity: 0.9 }}>âœ¦</span>
+          <span style={{ position: "absolute", right: "30px", top: "15px", color: "#e59b6e", fontSize: "16px", zIndex: 6, opacity: 0.9 }}>âœ¦</span>
+          <span style={{ position: "absolute", left: "10px", bottom: "40px", color: "#e59b6e", fontSize: "18px", zIndex: 6, opacity: 0.9 }}>âœ¦</span>
 
           {/* Platform 9 3/4 + Flying Harry Showcase */}
           <div className="empty-scene-wrap">
@@ -1839,7 +1609,7 @@ function EmptyState({ onCreate, hatImg }: { onCreate: () => void; hatImg?: strin
               }}
             >
               <span>Hedwig</span>
-              <span style={{ color: "#e59b6e" }}>✦</span>
+              <span style={{ color: "#e59b6e" }}>âœ¦</span>
             </div>
           </div>
 
@@ -1858,7 +1628,7 @@ function EmptyState({ onCreate, hatImg }: { onCreate: () => void; hatImg?: strin
                 margin: "0 0 4px"
               }}
             >
-              <span>✦</span> WISDOM & ARCHIVE
+              <span>âœ¦</span> WISDOM & ARCHIVE
             </span>
             <h4 style={{ color: "#ffffff", fontSize: "1.15rem", fontWeight: 800, margin: "0 0 6px" }}>
               Every Record Preserved
@@ -1898,7 +1668,7 @@ function EmptyState({ onCreate, hatImg }: { onCreate: () => void; hatImg?: strin
               }}
             >
               <span>Patronus</span>
-              <span style={{ color: "#7dd3fc" }}>✦</span>
+              <span style={{ color: "#7dd3fc" }}>âœ¦</span>
             </div>
           </div>
 
@@ -1917,7 +1687,7 @@ function EmptyState({ onCreate, hatImg }: { onCreate: () => void; hatImg?: strin
                 margin: "0 0 4px"
               }}
             >
-              <span>✦</span> PATRONUS GUARDRAILS
+              <span>âœ¦</span> PATRONUS GUARDRAILS
             </span>
             <h4 style={{ color: "#ffffff", fontSize: "1.15rem", fontWeight: 800, margin: "0 0 6px" }}>
               Financial Protection
@@ -1932,7 +1702,7 @@ function EmptyState({ onCreate, hatImg }: { onCreate: () => void; hatImg?: strin
       {/* Quote Footer Strip */}
       <div className="empty-quote-strip">
         <div className="empty-quote-left">
-          <span className="empty-quote-mark">“</span>
+          <span className="empty-quote-mark">â€œ</span>
           <span>A good plan today builds a stress-free tomorrow.</span>
         </div>
         <div className="empty-quote-right">
@@ -1966,7 +1736,7 @@ function Modal({ title, subtitle, onClose, children, isLight }: { title: string;
           <X size={18} />
         </button>
         <p className="eyebrow" style={{ color: isLight ? "#b86a3c" : "#ff2a55", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".14em", fontSize: "11px", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
-          <span>🩸</span> Vampire Sanctum
+          <span>ðŸ©¸</span> Vampire Sanctum
         </p>
         <h2 style={{ color: isLight ? "#1f1610" : "#ffffff", fontSize: "1.8rem", fontWeight: 800, margin: "4px 0 8px", textShadow: isLight ? "none" : "0 0 16px rgba(225, 29, 72, 0.45)" }}>
           {title}
@@ -1979,4 +1749,3 @@ function Modal({ title, subtitle, onClose, children, isLight }: { title: string;
     </div>
   );
 }
-
