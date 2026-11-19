@@ -1,4 +1,5 @@
 import React from "react";
+import "./AnalyticsView.css";
 import {
   BarChart3, PieChart, TrendingUp, CreditCard, Banknote, Zap, Landmark,
   Receipt, ArrowRight, ShieldCheck, AlertTriangle
@@ -78,32 +79,14 @@ export default function AnalyticsView({
   const topPayment = paymentBreakdown.length > 0 ? paymentBreakdown[0] : null;
 
   return (
-    <div className="analytics-page-view anim-fade-up">
+    <div className="analytics-view-container anim-fade-up">
       {/* Top Banner */}
-      <section
-        style={{
-          background: isLight
-            ? "linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(250, 244, 238, 0.96))"
-            : "linear-gradient(135deg, rgba(24, 14, 28, 0.92), rgba(14, 8, 20, 0.96))",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderRadius: "18px",
-          padding: "24px 28px",
-          border: isLight ? "1.5px solid rgba(184, 106, 60, 0.3)" : "1.5px solid rgba(168, 85, 247, 0.4)",
-          boxShadow: isLight ? "0 12px 35px rgba(80, 50, 30, 0.08)" : "0 20px 50px rgba(0, 0, 0, 0.6)",
-          marginBottom: "24px",
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "16px",
-        }}
-      >
+      <section className="analytics-banner">
         <div>
           <p className="eyebrow" style={{ color: isLight ? "#9333ea" : "#c084fc", display: "flex", alignItems: "center", gap: "6px", fontWeight: 700 }}>
             <span>📈</span> Spending Analytics · {monthLabel(cycle.month)}
           </p>
-          <h2 style={{ fontSize: "1.75rem", color: isLight ? "#1f1610" : "#ffffff", fontWeight: 800, margin: "4px 0" }}>
+          <h2 className="analytics-banner-title">
             Category & Channel Insights
           </h2>
           <p style={{ color: isLight ? "#6e5445" : "#e9d5ff", fontSize: "13px" }}>
@@ -135,10 +118,9 @@ export default function AnalyticsView({
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "24px" }}>
         {/* Top Category Card */}
         <div
+          className="analytics-metric-card"
           style={{
             background: isLight ? "rgba(255, 255, 255, 0.95)" : "rgba(24, 12, 18, 0.88)",
-            padding: "20px 22px",
-            borderRadius: "16px",
             border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(244, 63, 94, 0.35)",
             boxShadow: isLight ? "0 8px 24px rgba(80, 50, 30, 0.05)" : "0 10px 30px rgba(0, 0, 0, 0.4)",
           }}
@@ -163,10 +145,9 @@ export default function AnalyticsView({
 
         {/* Average Transaction Card */}
         <div
+          className="analytics-metric-card"
           style={{
             background: isLight ? "rgba(255, 255, 255, 0.95)" : "rgba(18, 16, 28, 0.88)",
-            padding: "20px 22px",
-            borderRadius: "16px",
             border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(168, 85, 247, 0.35)",
             boxShadow: isLight ? "0 8px 24px rgba(80, 50, 30, 0.05)" : "0 10px 30px rgba(0, 0, 0, 0.4)",
           }}
@@ -187,10 +168,9 @@ export default function AnalyticsView({
 
         {/* Most Used Payment Channel */}
         <div
+          className="analytics-metric-card"
           style={{
             background: isLight ? "rgba(255, 255, 255, 0.95)" : "rgba(12, 22, 28, 0.88)",
-            padding: "20px 22px",
-            borderRadius: "16px",
             border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(56, 189, 248, 0.35)",
             boxShadow: isLight ? "0 8px 24px rgba(80, 50, 30, 0.05)" : "0 10px 30px rgba(0, 0, 0, 0.4)",
           }}
@@ -217,17 +197,7 @@ export default function AnalyticsView({
       {/* Two-Column Analytics Layout */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "24px" }}>
         {/* Left Column: Full Category Mix */}
-        <div
-          style={{
-            background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(26, 15, 10, 0.88), rgba(16, 9, 6, 0.94))",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            borderRadius: "18px",
-            padding: "24px",
-            border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-            boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
-          }}
-        >
+        <div className="analytics-breakdown-card">
           <div style={{ marginBottom: "18px" }}>
             <p className="eyebrow" style={{ color: isLight ? "#8c5230" : "#e59b6e" }}>Expense Distribution</p>
             <h3 style={{ fontSize: "1.35rem", color: isLight ? "#1f1610" : "#ffffff", margin: "2px 0" }}>Category Breakdown</h3>
@@ -242,7 +212,7 @@ export default function AnalyticsView({
                 const pct = Math.round((x.value / Math.max(1, stats.total)) * 100);
                 const count = stats.expenses.filter(e => e.category === x.category).length;
                 return (
-                  <div key={x.category} style={{ background: isLight ? "rgba(184, 106, 60, 0.04)" : "rgba(255, 255, 255, 0.03)", padding: "12px 14px", borderRadius: "12px", border: isLight ? "1px solid rgba(184, 106, 60, 0.1)" : "1px solid rgba(255, 255, 255, 0.06)" }}>
+                  <div key={x.category} className="category-breakdown-item">
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <span className={`category-dot dot-${i % 5}`} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "28px", height: "28px", borderRadius: "8px", boxShadow: "0 2px 6px rgba(0,0,0,0.15)" }}>
@@ -284,17 +254,7 @@ export default function AnalyticsView({
         {/* Right Column: Payment Channels & Tips */}
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {/* Payment Methods Card */}
-          <div
-            style={{
-              background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(26, 15, 10, 0.88), rgba(16, 9, 6, 0.94))",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              padding: "24px",
-              border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-              boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
-            }}
-          >
+          <div className="analytics-breakdown-card">
             <div style={{ marginBottom: "18px" }}>
               <p className="eyebrow" style={{ color: isLight ? "#8c5230" : "#e59b6e" }}>Payment Channels</p>
               <h3 style={{ fontSize: "1.35rem", color: isLight ? "#1f1610" : "#ffffff", margin: "2px 0" }}>Payment Methods</h3>
@@ -306,7 +266,7 @@ export default function AnalyticsView({
             {paymentBreakdown.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {paymentBreakdown.map(p => (
-                  <div key={p.payment} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderRadius: "10px", background: isLight ? "rgba(184, 106, 60, 0.04)" : "rgba(255, 255, 255, 0.04)" }}>
+                  <div key={p.payment} className="payment-breakdown-item">
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <span style={{ padding: "6px", borderRadius: "8px", background: isLight ? "rgba(184, 106, 60, 0.12)" : "rgba(255, 255, 255, 0.1)", color: isLight ? "#b86a3c" : "#dfc7b5" }}>
                         {getPaymentIcon(p.payment)}
@@ -329,17 +289,7 @@ export default function AnalyticsView({
           </div>
 
           {/* Spending Insights Card */}
-          <div
-            style={{
-              background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(26, 15, 10, 0.88), rgba(16, 9, 6, 0.94))",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              padding: "24px",
-              border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-              boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
-            }}
-          >
+          <div className="analytics-breakdown-card">
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
               <ShieldCheck size={18} style={{ color: isLight ? "#16a34a" : "#4ade80" }} />
               <h3 style={{ fontSize: "1.2rem", color: isLight ? "#1f1610" : "#ffffff", margin: 0 }}>Financial Health Note</h3>

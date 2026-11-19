@@ -1,0 +1,102 @@
+/* AnalyticsView Component Styles */
+
+.analytics-view-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Banner */
+.analytics-banner {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 18px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(24, 14, 28, 0.92), rgba(14, 8, 20, 0.96));
+  border: 1.5px solid rgba(168, 85, 247, 0.4);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  transition: all 0.3s ease;
+}
+
+.theme-light .analytics-banner {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(250, 244, 238, 0.96));
+  border: 1.5px solid rgba(184, 106, 60, 0.3);
+  box-shadow: 0 12px 35px rgba(80, 50, 30, 0.08);
+}
+
+.analytics-banner-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 4px 0;
+  color: #ffffff;
+}
+
+.theme-light .analytics-banner-title {
+  color: #1f1610;
+}
+
+/* Summary Metric Cards */
+.analytics-metric-card {
+  padding: 20px 22px;
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+}
+
+.theme-light .analytics-metric-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(220, 200, 185, 0.8);
+  box-shadow: 0 8px 24px rgba(80, 50, 30, 0.05);
+}
+
+/* Category Breakdown Card */
+.analytics-breakdown-card {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 18px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(26, 15, 10, 0.88), rgba(16, 9, 6, 0.94));
+  border: 1.5px solid rgba(198, 116, 68, 0.35);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45);
+  transition: all 0.3s ease;
+}
+
+.theme-light .analytics-breakdown-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(220, 200, 185, 0.8);
+  box-shadow: 0 10px 30px rgba(80, 50, 30, 0.06);
+}
+
+.category-breakdown-item {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.25s ease;
+}
+
+.theme-light .category-breakdown-item {
+  background: rgba(184, 106, 60, 0.04);
+  border: 1px solid rgba(184, 106, 60, 0.1);
+}
+
+.payment-breakdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.25s ease;
+}
+
+.theme-light .payment-breakdown-item {
+  background: rgba(184, 106, 60, 0.04);
+}

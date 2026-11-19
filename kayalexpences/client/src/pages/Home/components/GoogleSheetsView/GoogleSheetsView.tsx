@@ -1,10 +1,11 @@
 import React, { useState } from "react";
+import "./GoogleSheetsView.css";
 import { toast } from "sonner";
 import {
   FileSpreadsheet, ExternalLink, RefreshCw, CheckCircle2,
   Save, HelpCircle
 } from "lucide-react";
-import { GoogleSheetsConfig, saveGoogleSheetsConfig, syncAllExpensesToGoogleSheets } from "../../../lib/googleSheets";
+import { GoogleSheetsConfig, saveGoogleSheetsConfig, syncAllExpensesToGoogleSheets } from "../../../../lib/googleSheets";
 
 type Expense = {
   id: string;
@@ -97,27 +98,9 @@ export default function GoogleSheetsView({
   };
 
   return (
-    <div className="sheets-page-view anim-fade-up">
+    <div className="sheets-view-container anim-fade-up">
       {/* Top Banner */}
-      <section
-        style={{
-          background: isLight
-            ? "linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(250, 244, 238, 0.96))"
-            : "linear-gradient(135deg, rgba(14, 28, 20, 0.92), rgba(8, 18, 12, 0.96))",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderRadius: "18px",
-          padding: "24px 28px",
-          border: isLight ? "1.5px solid rgba(184, 106, 60, 0.3)" : "1.5px solid rgba(34, 197, 94, 0.4)",
-          boxShadow: isLight ? "0 12px 35px rgba(80, 50, 30, 0.08)" : "0 20px 50px rgba(0, 0, 0, 0.6)",
-          marginBottom: "24px",
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "16px",
-        }}
-      >
+      <section className="sheets-banner">
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
             <p className="eyebrow" style={{ color: isLight ? "#16a34a" : "#4ade80", margin: 0, fontWeight: 700 }}>
@@ -139,10 +122,10 @@ export default function GoogleSheetsView({
               {isConfigured ? "● Connected" : "○ Not Configured"}
             </span>
           </div>
-          <h2 style={{ fontSize: "1.75rem", color: isLight ? "#1f1610" : "#ffffff", fontWeight: 800, margin: "4px 0" }}>
+          <h2 className="sheets-banner-title">
             Google Sheets Synchronizer
           </h2>
-          <p style={{ color: isLight ? "#6e5445" : "#bbf7d0", fontSize: "13px" }}>
+          <p className="sheets-banner-subtitle">
             Export and real-time synchronize your Kayal Expense entries with your private Google Spreadsheet.
           </p>
         </div>
@@ -174,17 +157,7 @@ export default function GoogleSheetsView({
       {/* Two-Column Grid: Settings Form & Sync Actions */}
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "24px" }}>
         {/* Settings Form */}
-        <div
-          style={{
-            background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(26, 15, 10, 0.88), rgba(16, 9, 6, 0.94))",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            borderRadius: "18px",
-            padding: "24px",
-            border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-            boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
-          }}
-        >
+        <div className="sheets-card">
           <div style={{ marginBottom: "18px" }}>
             <p className="eyebrow" style={{ color: isLight ? "#8c5230" : "#e59b6e" }}>Connection Setup</p>
             <h3 style={{ fontSize: "1.35rem", color: isLight ? "#1f1610" : "#ffffff", margin: "2px 0" }}>Sheet Credentials</h3>
@@ -197,19 +170,10 @@ export default function GoogleSheetsView({
               </label>
               <input
                 type="text"
+                className="sheets-input"
                 placeholder="https://docs.google.com/spreadsheets/d/.../edit"
                 value={docUrl}
                 onChange={e => setDocUrl(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  background: isLight ? "#ffffff" : "rgba(36, 11, 22, 0.95)",
-                  border: isLight ? "1.5px solid #dcc6b5" : "1.5px solid rgba(198, 116, 68, 0.35)",
-                  color: isLight ? "#1f1610" : "#ffffff",
-                  fontSize: "13px",
-                  outline: "none",
-                }}
               />
             </div>
 
@@ -219,19 +183,10 @@ export default function GoogleSheetsView({
               </label>
               <input
                 type="url"
+                className="sheets-input"
                 placeholder="https://script.google.com/macros/s/.../exec"
                 value={webhookUrl}
                 onChange={e => setWebhookUrl(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  background: isLight ? "#ffffff" : "rgba(36, 11, 22, 0.95)",
-                  border: isLight ? "1.5px solid #dcc6b5" : "1.5px solid rgba(198, 116, 68, 0.35)",
-                  color: isLight ? "#1f1610" : "#ffffff",
-                  fontSize: "13px",
-                  outline: "none",
-                }}
               />
             </div>
 
@@ -273,17 +228,7 @@ export default function GoogleSheetsView({
         {/* Sync Actions & Guide */}
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {/* Manual Sync Card */}
-          <div
-            style={{
-              background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(26, 15, 10, 0.88), rgba(16, 9, 6, 0.94))",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              padding: "24px",
-              border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-              boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
-            }}
-          >
+          <div className="sheets-card">
             <div style={{ marginBottom: "16px" }}>
               <p className="eyebrow" style={{ color: isLight ? "#8c5230" : "#e59b6e" }}>Bulk Synchronization</p>
               <h3 style={{ fontSize: "1.35rem", color: isLight ? "#1f1610" : "#ffffff", margin: "2px 0" }}>Sync Current Cycle</h3>
@@ -295,21 +240,11 @@ export default function GoogleSheetsView({
             <button
               onClick={handleSyncAll}
               disabled={syncing || !cycle || !cycle.expenses.length}
+              className="sheets-sync-btn"
               style={{
-                width: "100%",
-                padding: "12px 20px",
-                borderRadius: "10px",
                 background: syncing
                   ? "rgba(100, 116, 139, 0.3)"
                   : "linear-gradient(135deg, #16a34a, #15803d)",
-                color: "#ffffff",
-                border: "none",
-                fontWeight: 700,
-                fontSize: "14px",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
                 cursor: syncing ? "not-allowed" : "pointer",
                 boxShadow: syncing ? "none" : "0 6px 18px rgba(22, 163, 74, 0.35)",
               }}
@@ -340,17 +275,7 @@ export default function GoogleSheetsView({
           </div>
 
           {/* Quick Guide Card */}
-          <div
-            style={{
-              background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(26, 15, 10, 0.88), rgba(16, 9, 6, 0.94))",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              padding: "24px",
-              border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-              boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
-            }}
-          >
+          <div className="sheets-card">
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
               <HelpCircle size={18} style={{ color: isLight ? "#b86a3c" : "#e59b6e" }} />
               <h3 style={{ fontSize: "1.2rem", color: isLight ? "#1f1610" : "#ffffff", margin: 0 }}>How It Works</h3>

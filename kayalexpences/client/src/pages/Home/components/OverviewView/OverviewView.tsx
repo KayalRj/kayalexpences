@@ -1,4 +1,5 @@
 import React from "react";
+import "./OverviewView.css";
 import {
   CalendarDays, Plus, Wallet, CircleDollarSign, ArrowUpRight, ArrowDownRight,
   Check, Bell, AlertTriangle, ChevronRight, Receipt, BarChart3, Target, ArrowRight,
@@ -83,31 +84,15 @@ export default function OverviewView({
   const recentExpenses = [...stats.expenses].reverse().slice(0, 5);
 
   return (
-    <>
-      {/* Active Cycle Header */}
-      <section
-        className="cycle-heading anim-fade-up anim-delay-1"
-        style={{
-          background: isLight
-            ? "linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(250, 243, 235, 0.95))"
-            : "linear-gradient(135deg, rgba(26, 15, 10, 0.85), rgba(16, 9, 6, 0.9))",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          padding: "20px 26px",
-          borderRadius: "16px",
-          border: isLight ? "1.5px solid rgba(184, 106, 60, 0.3)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-          boxShadow: isLight
-            ? "0 12px 35px rgba(80, 50, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)"
-            : "0 16px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
-          marginBottom: "24px",
-        }}
-      >
+    <div className="overview-view-container">
+      {/* Active Cycle Header Banner */}
+      <section className="overview-cycle-banner anim-fade-up anim-delay-1">
         <div>
           <p className="eyebrow" style={{ display: "flex", alignItems: "center", gap: "6px", color: isLight ? "#8c5230" : "#e59b6e" }}>
             <CalendarDays size={14} /> Active salary cycle · {dayLabel(cycle.salaryDate)} → {dayLabel(cycleDays(cycle.salaryDate).end.toISOString().slice(0, 10))}
           </p>
-          <h2 style={{ fontSize: "1.5rem", marginTop: "4px", color: isLight ? "#1f1610" : "#ffffff", fontWeight: 800 }}>
-            {monthLabel(cycle.month)} <span style={{ fontSize: "0.95rem", color: isLight ? "#6e5445" : "#dfc7b5", fontWeight: "normal" }}>/{cycle.notes || "Overview Dashboard"}</span>
+          <h2 className="overview-banner-title">
+            {monthLabel(cycle.month)} <span className="overview-banner-subtitle">/{cycle.notes || "Overview Dashboard"}</span>
           </h2>
         </div>
         <div className="cycle-actions">
@@ -151,7 +136,7 @@ export default function OverviewView({
         ))}
       </section>
 
-      {/* Hero & Quick Stat Cards */}
+      {/* Hero Card & Quick Stats */}
       <section className="dashboard-grid anim-fade-up anim-delay-3">
         <div
           className="ledger-panel hero-card"
@@ -207,22 +192,8 @@ export default function OverviewView({
 
       {/* Two-Column Dashboard Overview */}
       <section className="lower-grid anim-fade-up anim-delay-5">
-        {/* Left Column: Recent Expenses Preview */}
-        <div
-          className="panel table-panel"
-          style={{
-            background: isLight
-              ? "rgba(255, 255, 255, 0.95)"
-              : "linear-gradient(145deg, rgba(24, 6, 14, 0.94) 0%, rgba(14, 3, 8, 0.96) 100%)",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            borderRadius: "18px",
-            border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(225, 29, 72, 0.45)",
-            boxShadow: isLight
-              ? "0 14px 40px rgba(80, 50, 30, 0.07)"
-              : "0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(225, 29, 72, 0.16)",
-          }}
-        >
+        {/* Left Column: Recent Activity Panel */}
+        <div className="recent-activity-panel">
           <div className="panel-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <p className="eyebrow" style={{ color: isLight ? "#dc2626" : "#ff3366", display: "flex", alignItems: "center", gap: "6px" }}>
@@ -251,19 +222,19 @@ export default function OverviewView({
 
           {recentExpenses.length > 0 ? (
             <div className="table-wrap" style={{ marginTop: "12px" }}>
-              <table>
+              <table className="recent-activity-table">
                 <thead>
                   <tr style={{ background: isLight ? "rgba(240, 230, 220, 0.6)" : "linear-gradient(90deg, rgba(76, 10, 30, 0.95), rgba(45, 6, 18, 0.95))" }}>
-                    <th style={{ color: isLight ? "#6e4228" : "#fda4af" }}>Date</th>
-                    <th style={{ color: isLight ? "#6e4228" : "#fda4af" }}>Expense</th>
-                    <th style={{ color: isLight ? "#6e4228" : "#fda4af" }}>Category</th>
-                    <th style={{ color: isLight ? "#6e4228" : "#fda4af" }}>Payment</th>
-                    <th style={{ color: isLight ? "#6e4228" : "#fda4af", textAlign: "right" }}>Amount</th>
+                    <th>Date</th>
+                    <th>Expense</th>
+                    <th>Category</th>
+                    <th>Payment</th>
+                    <th style={{ textAlign: "right" }}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentExpenses.map(e => (
-                    <tr key={e.id} style={{ borderBottom: isLight ? "1px solid rgba(184, 106, 60, 0.12)" : "1px solid rgba(225, 29, 72, 0.16)" }}>
+                    <tr key={e.id}>
                       <td style={{ color: isLight ? "#4a3528" : "#fff1f2", fontSize: "12px" }}>{dayLabel(e.date)}</td>
                       <td>
                         <strong style={{ color: isLight ? "#1f1610" : "#ffffff", fontSize: "13px" }}>{e.name}</strong>
@@ -343,22 +314,7 @@ export default function OverviewView({
         {/* Right Column: Category Mix & Navigation Teasers */}
         <div className="side-column">
           {/* Top Category Mix */}
-          <div
-            className="panel category-panel"
-            style={{
-              background: isLight
-                ? "rgba(255, 255, 255, 0.95)"
-                : "linear-gradient(135deg, rgba(26, 15, 10, 0.85), rgba(16, 9, 6, 0.9))",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-              boxShadow: isLight
-                ? "0 10px 30px rgba(80, 50, 30, 0.06)"
-                : "0 14px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
-              marginBottom: "20px",
-            }}
-          >
+          <div className="overview-category-panel">
             <div className="panel-header">
               <div>
                 <p className="eyebrow" style={{ color: isLight ? "#8c5230" : "#e59b6e" }}>Where it goes</p>
@@ -414,21 +370,7 @@ export default function OverviewView({
           </div>
 
           {/* Quick Budgets Link Card */}
-          <div
-            className="panel history-tease"
-            style={{
-              background: isLight
-                ? "rgba(255, 255, 255, 0.95)"
-                : "linear-gradient(135deg, rgba(26, 15, 10, 0.85), rgba(16, 9, 6, 0.9))",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              borderRadius: "18px",
-              border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-              boxShadow: isLight
-                ? "0 10px 30px rgba(80, 50, 30, 0.06)"
-                : "0 14px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
-            }}
-          >
+          <div className="overview-budget-teaser">
             <div>
               <p className="eyebrow" style={{ color: isLight ? "#8c5230" : "#e59b6e" }}>Allowances</p>
               <h3 style={{ color: isLight ? "#1f1610" : "#ffffff", fontSize: "1.2rem" }}>Budget Controls</h3>
@@ -446,6 +388,6 @@ export default function OverviewView({
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

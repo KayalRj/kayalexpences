@@ -1,4 +1,5 @@
 import React from "react";
+import "./BudgetsView.css";
 import {
   Target, Edit3, CalendarDays, Check, AlertTriangle, Bell, TrendingDown,
   Clock, ArrowRight, ShieldCheck, Zap
@@ -80,32 +81,14 @@ export default function BudgetsView({
   const monthlyStatus = getStatus(stats.total, cycle.budgets.monthly);
 
   return (
-    <div className="budgets-page-view anim-fade-up">
+    <div className="budgets-view-container anim-fade-up">
       {/* Top Banner */}
-      <section
-        style={{
-          background: isLight
-            ? "linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(250, 244, 238, 0.96))"
-            : "linear-gradient(135deg, rgba(20, 24, 18, 0.92), rgba(12, 16, 10, 0.96))",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderRadius: "18px",
-          padding: "24px 28px",
-          border: isLight ? "1.5px solid rgba(184, 106, 60, 0.3)" : "1.5px solid rgba(74, 222, 128, 0.4)",
-          boxShadow: isLight ? "0 12px 35px rgba(80, 50, 30, 0.08)" : "0 20px 50px rgba(0, 0, 0, 0.6)",
-          marginBottom: "24px",
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "16px",
-        }}
-      >
+      <section className="budgets-banner">
         <div>
           <p className="eyebrow" style={{ color: isLight ? "#16a34a" : "#4ade80", display: "flex", alignItems: "center", gap: "6px", fontWeight: 700 }}>
             <span>🎯</span> Spending Controls · {monthLabel(cycle.month)}
           </p>
-          <h2 style={{ fontSize: "1.75rem", color: isLight ? "#1f1610" : "#ffffff", fontWeight: 800, margin: "4px 0" }}>
+          <h2 className="budgets-banner-title">
             Budget Allowances & Targets
           </h2>
           <p style={{ color: isLight ? "#6e5445" : "#bbf7d0", fontSize: "13px" }}>
@@ -134,15 +117,12 @@ export default function BudgetsView({
       </section>
 
       {/* 3 Large Budget Cards Grid */}
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px", marginBottom: "28px" }}>
+      <section className="budgets-grid">
         {/* Daily Budget Card */}
         <div
+          className="budget-control-card"
           style={{
             background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(28, 16, 12, 0.9), rgba(16, 10, 8, 0.94))",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            borderRadius: "18px",
-            padding: "24px",
             border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(249, 115, 22, 0.35)",
             boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
           }}
@@ -184,12 +164,9 @@ export default function BudgetsView({
 
         {/* Weekly Budget Card */}
         <div
+          className="budget-control-card"
           style={{
             background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(16, 24, 16, 0.9), rgba(8, 16, 10, 0.94))",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            borderRadius: "18px",
-            padding: "24px",
             border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(74, 222, 128, 0.35)",
             boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
           }}
@@ -231,12 +208,9 @@ export default function BudgetsView({
 
         {/* Monthly Budget Card */}
         <div
+          className="budget-control-card"
           style={{
             background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(28, 14, 20, 0.9), rgba(16, 8, 12, 0.94))",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            borderRadius: "18px",
-            padding: "24px",
             border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(236, 72, 153, 0.35)",
             boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
           }}
@@ -278,17 +252,7 @@ export default function BudgetsView({
       </section>
 
       {/* Burn Rate & Projection Calculator Section */}
-      <section
-        style={{
-          background: isLight ? "rgba(255, 255, 255, 0.95)" : "linear-gradient(135deg, rgba(26, 15, 10, 0.88), rgba(16, 9, 6, 0.94))",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderRadius: "18px",
-          padding: "24px 28px",
-          border: isLight ? "1.5px solid rgba(220, 200, 185, 0.8)" : "1.5px solid rgba(198, 116, 68, 0.35)",
-          boxShadow: isLight ? "0 10px 30px rgba(80, 50, 30, 0.06)" : "0 14px 35px rgba(0, 0, 0, 0.45)",
-        }}
-      >
+      <section className="burn-rate-calculator-panel">
         <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <div>
             <p className="eyebrow" style={{ color: isLight ? "#8c5230" : "#e59b6e" }}>Burn Rate & Projections</p>
@@ -315,7 +279,7 @@ export default function BudgetsView({
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
-          <div style={{ background: isLight ? "rgba(184, 106, 60, 0.05)" : "rgba(255, 255, 255, 0.03)", padding: "16px", borderRadius: "12px", border: isLight ? "1px solid rgba(184, 106, 60, 0.12)" : "1px solid rgba(255, 255, 255, 0.06)" }}>
+          <div className="burn-rate-stat-box" style={{ background: isLight ? "rgba(184, 106, 60, 0.05)" : "rgba(255, 255, 255, 0.03)", border: isLight ? "1px solid rgba(184, 106, 60, 0.12)" : "1px solid rgba(255, 255, 255, 0.06)" }}>
             <span style={{ fontSize: "11px", color: isLight ? "#7a5c48" : "#dfc7b5", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 700 }}>Days Elapsed / Remaining</span>
             <strong style={{ fontSize: "1.35rem", color: isLight ? "#1f1610" : "#ffffff", display: "block", marginTop: "4px" }}>
               {elapsedDays} / {remainingDays} days
@@ -323,7 +287,7 @@ export default function BudgetsView({
             <small style={{ color: isLight ? "#7a5c48" : "#dfc7b5", fontSize: "11px" }}>Total {totalDays} days in cycle</small>
           </div>
 
-          <div style={{ background: isLight ? "rgba(184, 106, 60, 0.05)" : "rgba(255, 255, 255, 0.03)", padding: "16px", borderRadius: "12px", border: isLight ? "1px solid rgba(184, 106, 60, 0.12)" : "1px solid rgba(255, 255, 255, 0.06)" }}>
+          <div className="burn-rate-stat-box" style={{ background: isLight ? "rgba(184, 106, 60, 0.05)" : "rgba(255, 255, 255, 0.03)", border: isLight ? "1px solid rgba(184, 106, 60, 0.12)" : "1px solid rgba(255, 255, 255, 0.06)" }}>
             <span style={{ fontSize: "11px", color: isLight ? "#7a5c48" : "#dfc7b5", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 700 }}>Actual Daily Average</span>
             <strong style={{ fontSize: "1.35rem", color: isLight ? "#1f1610" : "#ffffff", display: "block", marginTop: "4px" }}>
               {money(actualDailyAvg)} <span style={{ fontSize: "12px", fontWeight: "normal" }}>/ day</span>
@@ -331,7 +295,7 @@ export default function BudgetsView({
             <small style={{ color: isLight ? "#7a5c48" : "#dfc7b5", fontSize: "11px" }}>based on {money(stats.total)} spent so far</small>
           </div>
 
-          <div style={{ background: isLight ? "rgba(22, 163, 74, 0.06)" : "rgba(74, 222, 128, 0.08)", padding: "16px", borderRadius: "12px", border: isLight ? "1px solid rgba(22, 163, 74, 0.2)" : "1px solid rgba(74, 222, 128, 0.2)" }}>
+          <div className="burn-rate-stat-box" style={{ background: isLight ? "rgba(22, 163, 74, 0.06)" : "rgba(74, 222, 128, 0.08)", border: isLight ? "1px solid rgba(22, 163, 74, 0.2)" : "1px solid rgba(74, 222, 128, 0.2)" }}>
             <span style={{ fontSize: "11px", color: isLight ? "#16a34a" : "#86efac", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 700 }}>Safe Daily Burn Limit</span>
             <strong style={{ fontSize: "1.35rem", color: isLight ? "#15803d" : "#4ade80", display: "block", marginTop: "4px" }}>
               {money(recommendedDaily)} <span style={{ fontSize: "12px", fontWeight: "normal" }}>/ day</span>

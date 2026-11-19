@@ -1,4 +1,4 @@
-﻿/* Copper Ledger design: warm parchment surfaces, burnished copper actions, editorial numbers, asymmetric workspace. */
+/* Copper Ledger design: warm parchment surfaces, burnished copper actions, editorial numbers, asymmetric workspace. */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, Banknote, BarChart3, Bell, CalendarDays, Car, Check, ChevronRight, CircleDollarSign, ClipboardList, CreditCard, Edit3, ExternalLink, FileSpreadsheet, Film, Filter, GraduationCap, HeartPulse, Home as HomeIcon, Landmark, LayoutDashboard, Lock, LogOut, Menu, Moon, Plus, Quote, Receipt, Search, Settings2, ShieldCheck, ShoppingBag, Smartphone, Sun, Tag, Target, Trash2, TrendingUp, User, Users, Utensils, Wallet, X, Zap } from "lucide-react";
