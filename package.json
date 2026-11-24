@@ -1,0 +1,9 @@
+{
+  "name": "kayal-expenses-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kayal Expenses Root Wrapper for Render Deployment",
+  "scripts": {
+    "build": "node build.js"
+  }
+}
